@@ -1,0 +1,54 @@
+{
+  "inspection_id": "SC-004",
+  "scenario": "SC-004",
+  "timestamp": "2026-10-28T16:40:23.158109+00:00",
+  "asset": {
+    "id": "STRUCTURE-INFRA-SC-004 (simulated)",
+    "type": "reinforced_concrete_beam",
+    "condition": "stubborn_propagating_stress_fracture",
+    "location": {
+      "lat": 37.7749,
+      "lon": -122.4194,
+      "elevation_m": 12.5
+    }
+  },
+  "sensors": {
+    "pressure_psi": 76.5,
+    "strain_microstrain": 288.0,
+    "vibration_rms_mm_s": 6.45,
+    "temperature_c": 33.2,
+    "humidity_pct": 72.5,
+    "acoustic_emission_db": 59.5
+  },
+  "visual_frame": {
+    "path": "C:\\Users\\shash\\OneDrive\\Desktop\\omnigaze-agent\\mock_telemetry\\synthetic_defect.png",
+    "resolution": "640x480",
+    "capture_device": "DJI-Mavic3-IR"
+  },
+  "defect_annotations_ground_truth": [
+    {
+      "type": "crack",
+      "bbox_xyxy": [
+        187,
+        0,
+        381,
+        94
+      ],
+      "point_count": 124
+    },
+    {
+      "type": "corrosion",
+      "bbox_xyxy": [
+        412,
+        213,
+        478,
+        275
+      ],
+      "center": [
+        445,
+        244
+      ]
+    }
+  ],
+  "status": "pending_inspection"
+}

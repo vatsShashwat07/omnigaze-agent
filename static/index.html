@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OmniGaze-Agent | Industrial Asset Mission Control</title>
+  <meta name="description" content="Autonomous Spatial-Visual Infrastructure Inspector powered by Meta Muse Spark Open, Meta SAM 2, and LangGraph.">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            scada: {
+              950: '#070a11',
+              900: '#0c111d',
+              850: '#111827',
+              800: '#1e293b',
+              700: '#334155',
+              cyan: '#06b6d4',
+              meta: '#0866ff',
+              emerald: '#10b981',
+              amber: '#f59e0b',
+              crimson: '#ef4444'
+            }
+          },
+          fontFamily: {
+            mono: ['"JetBrains Mono"', 'Menlo', 'Consolas', 'monospace'],
+            sans: ['Inter', 'system-ui', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Inter:wght@400;500;600;700;800&display=swap');
+    
+    body {
+      background-color: #070a11;
+      font-family: 'Inter', sans-serif;
+      color: #e2e8f0;
+      overflow-x: hidden;
+    }
+    
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .bg-grid {
+      background-size: 32px 32px;
+      background-image: 
+        linear-gradient(to right, rgba(30, 41, 59, 0.25) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(30, 41, 59, 0.25) 1px, transparent 1px);
+    }
+
+    .scanlines::before {
+      content: " ";
+      display: block;
+      position: absolute;
+      top: 0; left: 0; bottom: 0; right: 0;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+      background-size: 100% 4px;
+      z-index: 10;
+      pointer-events: none;
+      opacity: 0.4;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0c111d;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #334155;
+    }
+
+    @keyframes pulse-fast {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+    .animate-pulse-fast {
+      animation: pulse-fast 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col bg-scada-950 bg-grid select-none">
+
+  <!-- ── Top Bar ─────────────────────────────────────────────────────────── -->
+  <header class="h-14 border-b border-scada-800 bg-scada-900/90 backdrop-blur-md px-4 flex items-center justify-between z-30 shrink-0">
+    <div class="flex items-center space-x-3">
+      <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20 ring-1 ring-cyan-400/40">
+        <i data-lucide="crosshair" class="w-5 h-5 text-white"></i>
+      </div>
+      <div>
+        <div class="flex items-center space-x-2">
+          <h1 class="text-base font-bold tracking-tight text-white flex items-center gap-2">
+            OmniGaze-Agent
+          </h1>
+          <span class="text-slate-600">|</span>
+          <span class="text-xs text-slate-400 tracking-wider uppercase font-semibold">Industrial Asset Mission Control</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Honest Active Service Badges (derives dynamically from SSE / status) -->
+    <div class="hidden lg:flex items-center space-x-3 text-xs font-mono">
+      <!-- Muse badge: green "LIVE: <model id>" only if llm_provider is baseten/huggingface/custom; amber "MOCK FALLBACK" if mock -->
+      <div id="muse-badge" class="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-slate-900/90 border border-slate-700 text-slate-400 shadow-sm">
+        <span class="dot w-2 h-2 rounded-full bg-slate-500"></span>
+        <span id="muse-badge-label">LLM: Awaiting Run</span>
+      </div>
+
+      <!-- SAM badge: from segmentation.backend ("sam2" green, "classical-fallback" amber) -->
+      <div id="sam-badge" class="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-slate-900/90 border border-slate-700 text-slate-400 shadow-sm">
+        <span class="dot w-2 h-2 rounded-full bg-slate-500"></span>
+        <span id="sam-badge-label">Vision: Awaiting Run</span>
+      </div>
+
+      <div class="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-slate-900/90 border border-emerald-500/40 text-emerald-300 shadow-sm shadow-emerald-950">
+        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+        <span>LangGraph Engine</span>
+        <span class="text-slate-500 font-sans">[Armed]</span>
+      </div>
+    </div>
+
+    <!-- System Time & Health -->
+    <div class="flex items-center space-x-4 text-xs font-mono">
+      <div class="text-right">
+        <div class="text-slate-400" id="utc-clock">00:00:00 UTC</div>
+        <div class="text-[10px] text-cyan-400 font-bold" id="asset-id-ticker">Awaiting Ingest</div>
+      </div>
+      <div class="h-7 w-[1px] bg-scada-800"></div>
+      <button onclick="pingHealth()" class="p-2 rounded bg-scada-850 hover:bg-scada-800 border border-scada-700 text-slate-300 hover:text-white transition" title="Refresh Diagnostic Telemetry">
+        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- ── Main Grid ───────────────────────────────────────────────────────── -->
+  <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3 p-3 overflow-hidden">
+
+    <!-- ── LEFT PANEL: Vision Feed & SAM Segmentation (col 4) ──────────── -->
+    <section class="lg:col-span-4 flex flex-col bg-scada-900/80 rounded-xl border border-scada-800 shadow-xl overflow-hidden backdrop-blur-sm">
+      <div class="h-10 px-3 bg-scada-850/90 border-b border-scada-800 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <i data-lucide="camera" class="w-4 h-4 text-cyan-400"></i>
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-200">Optical Inspection Frame</span>
+        </div>
+        <div class="flex items-center space-x-1 text-[11px] font-mono">
+          <span class="px-1.5 py-0.5 rounded bg-scada-800 text-slate-400 border border-scada-700" id="capture-device-tag">Optical Sensor</span>
+          <span class="px-1.5 py-0.5 rounded bg-cyan-950/80 text-cyan-300 border border-cyan-800/50">640x480</span>
+        </div>
+      </div>
+
+      <!-- Viewport -->
+      <div class="relative flex-1 bg-black flex items-center justify-center overflow-hidden min-h-[300px] scanlines">
+        <img id="inspection-img" 
+             src="/mock_telemetry/synthetic_defect.png" 
+             alt="Inspection View" 
+             class="w-full h-full object-contain transition-all duration-300">
+
+        <!-- Reticle HUD overlay -->
+        <div class="absolute inset-0 pointer-events-none border border-cyan-500/20 m-3 flex flex-col justify-between p-2">
+          <div class="flex justify-between text-[10px] font-mono text-cyan-400/80">
+            <span id="target-zone-label">[TARGET ZONE]</span>
+            <span id="cam-status">READY</span>
+          </div>
+          <div class="flex justify-center items-center">
+            <div class="w-8 h-8 border border-cyan-400/40 rounded-full flex items-center justify-center">
+              <div class="w-1.5 h-1.5 bg-cyan-400/80 rounded-full"></div>
+            </div>
+          </div>
+          <div class="flex justify-between text-[10px] font-mono text-slate-400">
+            <span id="backend-indicator">MODE: PENDING</span>
+            <span>FOV: 84°</span>
+          </div>
+        </div>
+
+        <!-- Defect Annotation Tag -->
+        <div id="defect-tag" class="hidden absolute top-4 left-4 bg-red-950/90 border border-red-500 text-red-200 text-xs px-2.5 py-1.5 rounded-lg shadow-lg font-mono backdrop-blur-md">
+          <div class="flex items-center space-x-1.5 font-bold">
+            <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+            <span id="defect-type-label">DEFECT DETECTED</span>
+          </div>
+          <div class="text-[10px] text-red-300 mt-0.5" id="defect-meta-label">Area: 0.00%</div>
+        </div>
+      </div>
+
+      <!-- Vision Controls & Metrics -->
+      <div class="p-3 bg-scada-850/80 border-t border-scada-800 space-y-2">
+        <div class="flex items-center justify-between">
+          <span class="text-xs text-slate-300 font-medium">Visualization Layer:</span>
+          <div class="inline-flex rounded-lg border border-scada-700 p-0.5 bg-scada-900 font-mono text-xs">
+            <button id="btn-view-raw" onclick="switchVisionView('raw')" class="px-2.5 py-1 rounded-md text-slate-400 hover:text-white transition">Optical</button>
+            <button id="btn-view-sam" onclick="switchVisionView('sam')" class="px-2.5 py-1 rounded-md bg-cyan-600 text-white font-semibold shadow">Defect Mask</button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 pt-1 font-mono text-center">
+          <div class="p-2 rounded bg-scada-900/90 border border-scada-800">
+            <div class="text-[10px] text-slate-400">Isolated Defect Count</div>
+            <div id="stat-defect-count" class="text-sm font-bold text-white mt-0.5">0</div>
+          </div>
+          <div class="p-2 rounded bg-scada-900/90 border border-scada-800">
+            <div class="text-[10px] text-slate-400">Surface Damage Area</div>
+            <div id="stat-defect-area" class="text-sm font-bold text-cyan-400 mt-0.5">0.00%</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── MIDDLE PANEL: Telemetry & Honest Stress Chart (col 4) ───────── -->
+    <section class="lg:col-span-4 flex flex-col bg-scada-900/80 rounded-xl border border-scada-800 shadow-xl overflow-hidden backdrop-blur-sm">
+      <div class="h-10 px-3 bg-scada-850/90 border-b border-scada-800 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <i data-lucide="gauge" class="w-4 h-4 text-amber-400"></i>
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-200">Structural Telemetry</span>
+        </div>
+        <!-- Status badge derives directly from limit ratios or risk_level -->
+        <div id="twin-status-badge" class="px-2 py-0.5 rounded text-[10px] font-mono bg-slate-900 border border-slate-700 text-slate-400 flex items-center space-x-1">
+          <span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
+          <span>AWAITING TELEMETRY</span>
+        </div>
+      </div>
+
+      <div class="p-3 flex-1 flex flex-col space-y-3 overflow-y-auto">
+        <!-- 3 Primary Gauges (real units: bar, µε, mm/s) -->
+        <div class="grid grid-cols-3 gap-2">
+          <div class="p-2.5 rounded-lg bg-scada-850 border border-scada-800 flex flex-col justify-between">
+            <div class="flex justify-between items-center text-[11px] text-slate-400">
+              <span class="font-medium">Pressure</span>
+              <span class="text-[10px] font-mono text-slate-500">&lt;3.5 bar</span>
+            </div>
+            <div class="my-2">
+              <div id="val-pressure" class="text-2xl font-bold font-mono text-cyan-400">--</div>
+              <div class="text-[10px] text-slate-400 font-mono">bar (real)</div>
+            </div>
+            <div class="w-full bg-scada-900 rounded-full h-1.5 overflow-hidden">
+              <div id="bar-pressure" class="bg-cyan-400 h-1.5 rounded-full transition-all duration-700" style="width: 0%;"></div>
+            </div>
+          </div>
+
+          <div class="p-2.5 rounded-lg bg-scada-850 border border-scada-800 flex flex-col justify-between">
+            <div class="flex justify-between items-center text-[11px] text-slate-400">
+              <span class="font-medium">Strain</span>
+              <span class="text-[10px] font-mono text-slate-500">&lt;150 µε</span>
+            </div>
+            <div class="my-2">
+              <div id="val-strain" class="text-2xl font-bold font-mono text-amber-400">--</div>
+              <div class="text-[10px] text-slate-400 font-mono">µε (real)</div>
+            </div>
+            <div class="w-full bg-scada-900 rounded-full h-1.5 overflow-hidden">
+              <div id="bar-strain" class="bg-amber-400 h-1.5 rounded-full transition-all duration-700" style="width: 0%;"></div>
+            </div>
+          </div>
+
+          <div class="p-2.5 rounded-lg bg-scada-850 border border-scada-800 flex flex-col justify-between">
+            <div class="flex justify-between items-center text-[11px] text-slate-400">
+              <span class="font-medium">Vibration</span>
+              <span class="text-[10px] font-mono text-slate-500">&lt;3.0 mm/s</span>
+            </div>
+            <div class="my-2">
+              <div id="val-vibration" class="text-2xl font-bold font-mono text-purple-400">--</div>
+              <div class="text-[10px] text-slate-400 font-mono">mm/s RMS</div>
+            </div>
+            <div class="w-full bg-scada-900 rounded-full h-1.5 overflow-hidden">
+              <div id="bar-vibration" class="bg-purple-400 h-1.5 rounded-full transition-all duration-700" style="width: 0%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Telemetry History Chart (Empty before run; real telemetry only in real units) -->
+        <div class="p-3 rounded-lg bg-scada-850 border border-scada-800 flex-1 flex flex-col min-h-[170px]">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-mono text-slate-300 flex items-center gap-1.5">
+              <i data-lucide="activity" class="w-3.5 h-3.5 text-cyan-400"></i>
+              Real Telemetry Convergence Trend
+            </span>
+            <span id="chart-state-msg" class="text-[10px] font-mono text-slate-500">EMPTY UNTIL RUN</span>
+          </div>
+          <div class="flex-1 relative w-full h-[130px]">
+            <canvas id="telemetryChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Environmental Sensors Row -->
+        <div class="grid grid-cols-3 gap-2 font-mono text-xs">
+          <div class="p-2 rounded bg-scada-850 border border-scada-800 flex items-center space-x-2">
+            <i data-lucide="thermometer" class="w-4 h-4 text-orange-400"></i>
+            <div>
+              <div class="text-[10px] text-slate-400">Temp</div>
+              <div id="val-temp" class="font-bold text-slate-200">-- °C</div>
+            </div>
+          </div>
+          <div class="p-2 rounded bg-scada-850 border border-scada-800 flex items-center space-x-2">
+            <i data-lucide="droplets" class="w-4 h-4 text-blue-400"></i>
+            <div>
+              <div class="text-[10px] text-slate-400">Humidity</div>
+              <div id="val-humidity" class="font-bold text-slate-200">-- %</div>
+            </div>
+          </div>
+          <div class="p-2 rounded bg-scada-850 border border-scada-800 flex items-center space-x-2">
+            <i data-lucide="volume-2" class="w-4 h-4 text-emerald-400"></i>
+            <div>
+              <div class="text-[10px] text-slate-400">Acoustic</div>
+              <div id="val-acoustic" class="font-bold text-slate-200">-- dB</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── RIGHT PANEL: Autonomous Agent Core & Terminal (col 4) ───────── -->
+    <section class="lg:col-span-4 flex flex-col bg-scada-900/80 rounded-xl border border-scada-800 shadow-xl overflow-hidden backdrop-blur-sm">
+      <div class="h-10 px-3 bg-scada-850/90 border-b border-scada-800 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <i data-lucide="cpu" class="w-4 h-4 text-cyan-400"></i>
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-200">Autonomous Agent Core</span>
+        </div>
+        <div class="flex items-center space-x-1.5 font-mono text-[11px]">
+          <span id="severity-badge" class="px-2 py-0.5 rounded font-bold bg-slate-800 text-slate-400 border border-slate-700">STANDBY</span>
+        </div>
+      </div>
+
+      <!-- Node Progression Pipeline -->
+      <div class="p-2.5 bg-scada-850/60 border-b border-scada-800">
+        <div class="grid grid-cols-5 gap-1 text-[10px] font-mono text-center">
+          <div id="node-ingest" class="p-1 rounded bg-scada-900 border border-scada-700 text-slate-400 flex flex-col items-center">
+            <span>1. Ingest</span>
+            <span class="status-dot w-1.5 h-1.5 rounded-full bg-slate-600 mt-1"></span>
+          </div>
+          <div id="node-segment" class="p-1 rounded bg-scada-900 border border-scada-700 text-slate-400 flex flex-col items-center">
+            <span>2. SAM</span>
+            <span class="status-dot w-1.5 h-1.5 rounded-full bg-slate-600 mt-1"></span>
+          </div>
+          <div id="node-reasoning" class="p-1 rounded bg-scada-900 border border-scada-700 text-slate-400 flex flex-col items-center">
+            <span>3. Reason</span>
+            <span class="status-dot w-1.5 h-1.5 rounded-full bg-slate-600 mt-1"></span>
+          </div>
+          <div id="node-action" class="p-1 rounded bg-scada-900 border border-scada-700 text-slate-400 flex flex-col items-center">
+            <span>4. Action</span>
+            <span class="status-dot w-1.5 h-1.5 rounded-full bg-slate-600 mt-1"></span>
+          </div>
+          <div id="node-verify" class="p-1 rounded bg-scada-900 border border-scada-700 text-slate-400 flex flex-col items-center">
+            <span>5. Verify</span>
+            <span class="status-dot w-1.5 h-1.5 rounded-full bg-slate-600 mt-1"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Terminal / Streaming Reasoning -->
+      <div class="flex-1 p-3 flex flex-col overflow-hidden">
+        <div class="flex items-center justify-between text-[11px] font-mono text-slate-400 mb-1.5">
+          <span class="flex items-center gap-1.5">
+            <i data-lucide="terminal" class="w-3.5 h-3.5 text-cyan-400"></i>
+            Agent Execution Stream
+          </span>
+          <span id="stream-status" class="text-cyan-400">AWAITING TRIGGER</span>
+        </div>
+
+        <div id="terminal-log" class="flex-1 bg-black/90 rounded-lg border border-scada-800 p-3 font-mono text-[11px] leading-relaxed text-slate-300 overflow-y-auto space-y-1.5">
+          <div class="text-slate-500">> OmniGaze-Agent ready.</div>
+          <div class="text-slate-500">> Select a scenario below and launch the inspection pipeline.</div>
+        </div>
+
+        <!-- Dispatched Action List Box -->
+        <div class="mt-2.5 p-2 rounded-lg bg-scada-850/90 border border-scada-800">
+          <div class="text-[11px] font-bold text-slate-300 mb-1 flex items-center justify-between">
+            <span>Dispatched Actuator Countermeasures:</span>
+            <span id="action-count" class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-scada-900 text-cyan-400">0 active</span>
+          </div>
+          <div id="actions-container" class="space-y-1 text-[11px] font-mono max-h-24 overflow-y-auto text-slate-400">
+            <div class="text-slate-600 italic">No countermeasures dispatched yet.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ── Bottom Bar: Scenario Selector & Trigger ─────────────────────────── -->
+  <footer class="h-20 border-t border-scada-800 bg-scada-900/95 backdrop-blur-md px-4 flex flex-col sm:flex-row items-center justify-between gap-3 z-30 shrink-0">
+    <!-- Scenario Selection Pills -->
+    <div class="flex items-center space-x-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
+      <span class="text-xs text-slate-400 font-mono font-semibold hidden md:inline">SCENARIO:</span>
+      
+      <button onclick="selectScenario('SC-001')" id="btn-sc-001" class="scenario-btn px-3 py-1.5 rounded-lg border border-red-500/50 bg-red-950/40 text-red-200 text-xs font-mono font-medium hover:bg-red-900/50 transition flex items-center space-x-1.5">
+        <span class="w-2 h-2 rounded-full bg-red-500"></span>
+        <span>SC-001 Critical Crack</span>
+      </button>
+
+      <button onclick="selectScenario('SC-002')" id="btn-sc-002" class="scenario-btn px-3 py-1.5 rounded-lg border border-amber-500/40 bg-amber-950/30 text-amber-200 text-xs font-mono font-medium hover:bg-amber-900/40 transition flex items-center space-x-1.5">
+        <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+        <span>SC-002 Corrosion</span>
+      </button>
+
+      <button onclick="selectScenario('SC-003')" id="btn-sc-003" class="scenario-btn px-3 py-1.5 rounded-lg border border-emerald-500/40 bg-emerald-950/30 text-emerald-200 text-xs font-mono font-medium hover:bg-emerald-900/40 transition flex items-center space-x-1.5">
+        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+        <span>SC-003 Nominal</span>
+      </button>
+
+      <button onclick="selectScenario('SC-004')" id="btn-sc-004" class="scenario-btn px-3 py-1.5 rounded-lg border border-purple-500/50 bg-purple-950/40 text-purple-200 text-xs font-mono font-medium hover:bg-purple-900/50 transition flex items-center space-x-1.5 ring-1 ring-purple-400">
+        <span class="w-2 h-2 rounded-full bg-purple-400"></span>
+        <span>SC-004 Stubborn Crack</span>
+      </button>
+    </div>
+
+    <!-- Trigger Action Button -->
+    <div class="flex items-center space-x-3">
+      <div class="text-right text-xs font-mono hidden md:block">
+        <div class="text-slate-400">EXECUTION TIME</div>
+        <div id="stopwatch" class="text-cyan-400 font-bold">0.00s</div>
+      </div>
+
+      <button id="btn-run" onclick="triggerInspection()" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-cyan-500/25 ring-1 ring-cyan-300 flex items-center space-x-2 transition active:scale-95">
+        <i data-lucide="zap" class="w-4 h-4 fill-current"></i>
+        <span>Run Closed-Loop Inspection</span>
+      </button>
+    </div>
+  </footer>
+
+  <!-- ── Human-in-the-Loop (HITL) Authorization Modal ───────────────────── -->
+  <div id="hitl-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-scada-900 border-2 border-red-500 rounded-2xl max-w-lg w-full shadow-2xl shadow-red-950 overflow-hidden transform transition-all animate-bounce-once">
+      
+      <!-- Modal Header -->
+      <div class="p-4 bg-gradient-to-r from-red-950 to-scada-900 border-b border-red-800/80 flex items-center justify-between">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-9 h-9 rounded-lg bg-red-600/30 border border-red-500 flex items-center justify-center text-red-400">
+            <i data-lucide="shield-alert" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <h2 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+              Human-in-the-Loop Override
+              <span class="text-[10px] px-1.5 py-0.5 rounded bg-red-600 text-white font-mono">SEV-CRITICAL</span>
+            </h2>
+            <p class="text-[11px] text-red-300">High-severity robotic mitigation requires command authorization.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-4 space-y-3 font-mono text-xs">
+        <div class="p-3 rounded-lg bg-black/60 border border-red-900/50 space-y-1.5">
+          <div class="text-slate-400">TARGET ASSET: <span class="text-white font-bold" id="hitl-asset">--</span></div>
+          <div class="text-slate-400">IDENTIFIED THREAT: <span class="text-red-400 font-bold" id="hitl-threat">CRITICAL THREAT</span></div>
+        </div>
+
+        <div>
+          <div class="text-slate-300 font-bold mb-1.5">Pending Actuator Directives:</div>
+          <ul id="hitl-actions-list" class="space-y-1 text-slate-300">
+            <li class="flex items-center space-x-2 p-1.5 rounded bg-scada-850 border border-scada-800">
+              <span class="text-cyan-400">►</span>
+              <span>pressure_valve_adjustment: PV-12</span>
+            </li>
+            <li class="flex items-center space-x-2 p-1.5 rounded bg-scada-850 border border-scada-800">
+              <span class="text-cyan-400">►</span>
+              <span>emergency_lockdown: Structural load bypass</span>
+            </li>
+            <li class="flex items-center space-x-2 p-1.5 rounded bg-scada-850 border border-scada-800">
+              <span class="text-cyan-400">►</span>
+              <span>drone_repositioning: Altitude descend for photogrammetry</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="text-[11px] text-slate-400 italic">
+          Safety Protocol: Authorizing will immediately trip hydraulic valves and signal local robotic controllers.
+        </div>
+      </div>
+
+      <!-- Modal Actions -->
+      <div class="p-4 bg-scada-850 border-t border-scada-800 flex items-center justify-end space-x-3">
+        <button onclick="closeHitlModal(false)" class="px-4 py-2 rounded-lg bg-scada-700 hover:bg-scada-600 text-slate-200 text-xs font-mono transition">
+          Simulation Only
+        </button>
+        <button onclick="confirmHitlAuthorization()" class="px-5 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-red-600/40 ring-1 ring-red-400 flex items-center space-x-2 transition">
+          <i data-lucide="check-check" class="w-4 h-4"></i>
+          <span>Authorize Mitigation</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── Dashboard Logic ─────────────────────────────────────────────────── -->
+  <script>
+    // State
+    let currentScenario = 'SC-004';
+    let currentEventSource = null;
+    let stopwatchInterval = null;
+    let telemetryChart = null;
+    let rawImageUrl = '/mock_telemetry/synthetic_defect.png';
+    let maskImageUrl = '/mock_telemetry/annotated_defects.png';
+    let currentVisionMode = 'sam';
+
+    // Audio synthesizer for industrial tactile feedback
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playBeep(freq = 600, duration = 0.08, type = 'sine') {
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    // Initialize UI on load
+    window.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+      initClock();
+      initChart();
+      selectScenario('SC-004');
+    });
+
+    // Real-time UTC Clock
+    function initClock() {
+      setInterval(() => {
+        const now = new Date();
+        document.getElementById('utc-clock').textContent = now.toUTCString().slice(17, 25) + ' UTC';
+      }, 1000);
+    }
+
+    // Initialize Stress Chart: Completely empty before run, multi-axis for real physical units (bar, µε, mm/s)
+    function initChart() {
+      const ctx = document.getElementById('telemetryChart').getContext('2d');
+      telemetryChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [
+            {
+              label: 'Pressure (bar)',
+              data: [],
+              borderColor: '#06b6d4',
+              backgroundColor: 'rgba(6, 182, 212, 0.08)',
+              borderWidth: 2,
+              tension: 0.2,
+              pointRadius: 4,
+              yAxisID: 'yBar'
+            },
+            {
+              label: 'Strain (µε)',
+              data: [],
+              borderColor: '#f59e0b',
+              backgroundColor: 'transparent',
+              borderWidth: 2,
+              tension: 0.2,
+              pointRadius: 4,
+              yAxisID: 'yStrain'
+            },
+            {
+              label: 'Vibration (mm/s)',
+              data: [],
+              borderColor: '#c084fc',
+              backgroundColor: 'transparent',
+              borderWidth: 2,
+              tension: 0.2,
+              pointRadius: 4,
+              yAxisID: 'yVib'
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top',
+              labels: {
+                color: '#94a3b8',
+                boxWidth: 8,
+                font: { size: 10, family: '"JetBrains Mono"' }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(51, 65, 85, 0.3)' },
+              ticks: { color: '#64748b', font: { size: 9, family: '"JetBrains Mono"' } }
+            },
+            yBar: {
+              type: 'linear',
+              position: 'left',
+              title: { display: true, text: 'bar', color: '#06b6d4', font: { size: 9 } },
+              grid: { color: 'rgba(51, 65, 85, 0.2)' },
+              ticks: { color: '#06b6d4', font: { size: 9, family: '"JetBrains Mono"' } }
+            },
+            yStrain: {
+              type: 'linear',
+              position: 'right',
+              title: { display: true, text: 'µε', color: '#f59e0b', font: { size: 9 } },
+              grid: { drawOnChartArea: false },
+              ticks: { color: '#f59e0b', font: { size: 9, family: '"JetBrains Mono"' } }
+            },
+            yVib: {
+              type: 'linear',
+              position: 'right',
+              title: { display: true, text: 'mm/s', color: '#c084fc', font: { size: 9 } },
+              grid: { drawOnChartArea: false },
+              ticks: { color: '#c084fc', font: { size: 9, family: '"JetBrains Mono"' } }
+            }
+          }
+        }
+      });
+    }
+
+    // Scenario Selection
+    function selectScenario(scId) {
+      currentScenario = scId;
+      playBeep(450, 0.05);
+
+      document.querySelectorAll('.scenario-btn').forEach(btn => {
+        btn.classList.remove('ring-2', 'ring-white', 'scale-105');
+      });
+
+      const activeBtn = document.getElementById(`btn-${scId.toLowerCase()}`);
+      if (activeBtn) {
+        activeBtn.classList.add('ring-2', 'ring-white', 'scale-105');
+      }
+
+      logTerminal(`> Scenario selected: [${scId}] — Ready for closed-loop trigger.`);
+    }
+
+    // Vision Layer Toggle
+    function switchVisionView(mode) {
+      currentVisionMode = mode;
+      const img = document.getElementById('inspection-img');
+      const btnRaw = document.getElementById('btn-view-raw');
+      const btnSam = document.getElementById('btn-view-sam');
+
+      if (mode === 'raw') {
+        img.src = rawImageUrl;
+        btnRaw.className = "px-2.5 py-1 rounded-md bg-cyan-600 text-white font-semibold shadow";
+        btnSam.className = "px-2.5 py-1 rounded-md text-slate-400 hover:text-white transition";
+      } else {
+        img.src = maskImageUrl;
+        btnSam.className = "px-2.5 py-1 rounded-md bg-cyan-600 text-white font-semibold shadow";
+        btnRaw.className = "px-2.5 py-1 rounded-md text-slate-400 hover:text-white transition";
+      }
+      playBeep(700, 0.04);
+    }
+
+    // Terminal Logging Helper
+    function logTerminal(html, tag = '') {
+      const term = document.getElementById('terminal-log');
+      const div = document.createElement('div');
+      div.className = tag ? `text-${tag}-300` : 'text-slate-300';
+      div.innerHTML = html;
+      term.appendChild(div);
+      term.scrollTop = term.scrollHeight;
+    }
+
+    // Node Highlighting
+    function setNodeStatus(nodeId, state = 'active') {
+      const el = document.getElementById(`node-${nodeId}`);
+      if (!el) return;
+      const dot = el.querySelector('.status-dot');
+
+      if (state === 'active') {
+        el.className = 'p-1 rounded bg-cyan-950/80 border border-cyan-500 text-cyan-200 flex flex-col items-center shadow-md shadow-cyan-950';
+        if (dot) dot.className = 'status-dot w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse';
+      } else if (state === 'done') {
+        el.className = 'p-1 rounded bg-scada-850 border border-emerald-500/60 text-emerald-300 flex flex-col items-center';
+        if (dot) dot.className = 'status-dot w-1.5 h-1.5 rounded-full bg-emerald-400';
+      } else {
+        el.className = 'p-1 rounded bg-scada-900 border border-scada-700 text-slate-400 flex flex-col items-center';
+        if (dot) dot.className = 'status-dot w-1.5 h-1.5 rounded-full bg-slate-600';
+      }
+    }
+
+    function resetNodes() {
+      ['ingest', 'segment', 'reasoning', 'action', 'verify'].forEach(n => setNodeStatus(n, 'idle'));
+    }
+
+    // Main Trigger: Starts SSE Streaming
+    function triggerInspection() {
+      if (currentEventSource) {
+        currentEventSource.close();
+      }
+
+      playBeep(880, 0.12, 'square');
+      resetNodes();
+      
+      const btnRun = document.getElementById('btn-run');
+      btnRun.disabled = true;
+      btnRun.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin"></i><span>Inspecting...</span>`;
+      lucide.createIcons();
+
+      // Reset UI elements
+      document.getElementById('terminal-log').innerHTML = '';
+      document.getElementById('actions-container').innerHTML = '';
+      document.getElementById('defect-tag').classList.add('hidden');
+      
+      // Reset chart to empty before run
+      if (telemetryChart) {
+        telemetryChart.data.labels = [];
+        telemetryChart.data.datasets.forEach(ds => ds.data = []);
+        telemetryChart.update();
+      }
+      document.getElementById('chart-state-msg').textContent = 'RECORDING RUN...';
+
+      // Start stopwatch
+      const startTime = performance.now();
+      const swEl = document.getElementById('stopwatch');
+      clearInterval(stopwatchInterval);
+      stopwatchInterval = setInterval(() => {
+        const elapsed = (performance.now() - startTime) / 1000;
+        swEl.textContent = elapsed.toFixed(2) + 's';
+      }, 50);
+
+      document.getElementById('stream-status').textContent = 'CONNECTING SSE...';
+      logTerminal(`> Initializing LangGraph state graph for scenario: [${currentScenario}]`, 'cyan');
+
+      // Connect EventSource to FastAPI SSE endpoint
+      const streamUrl = `/api/stream/${currentScenario}?provider=baseten`;
+      currentEventSource = new EventSource(streamUrl);
+
+      // Error event handling (STRICT_LIVE failure)
+      currentEventSource.addEventListener('error', (e) => {
+        try {
+          const errData = JSON.parse(e.data);
+          logTerminal(`[ERROR] Live Provider Failure: ${errData.error} (${errData.type})`, 'red');
+        } catch (ex) {}
+      });
+
+      currentEventSource.addEventListener('ingest', (e) => {
+        const data = JSON.parse(e.data);
+        setNodeStatus('ingest', 'done');
+        setNodeStatus('segment', 'active');
+        playBeep(520, 0.08);
+
+        document.getElementById('stream-status').textContent = 'INGEST COMPLETE';
+        document.getElementById('asset-id-ticker').textContent = data.asset.id;
+        document.getElementById('target-zone-label').textContent = `[${data.asset.id}]`;
+        document.getElementById('hitl-asset').textContent = data.asset.id;
+        
+        // Update sensor values in real units
+        updateSensors(data.sensors);
+
+        // Update status badge from real limit ratios / risk level
+        updateStatusBadge(data.risk_level, data.limit_ratios);
+
+        // Plot real initial telemetry point
+        if (telemetryChart) {
+          const barVal = +(data.sensors.pressure_psi * 0.0689476).toFixed(2);
+          telemetryChart.data.labels.push('Ingest (T0)');
+          telemetryChart.data.datasets[0].data.push(barVal);
+          telemetryChart.data.datasets[1].data.push(data.sensors.strain_microstrain);
+          telemetryChart.data.datasets[2].data.push(data.sensors.vibration_rms_mm_s);
+          telemetryChart.update();
+        }
+
+        rawImageUrl = data.image_url;
+        if (currentVisionMode === 'raw') {
+          document.getElementById('inspection-img').src = rawImageUrl;
+        }
+
+        logTerminal(`[IngestTelemetry] Asset: <span class="text-white font-bold">${data.asset.id}</span> | Risk Level: <span class="font-bold">${data.risk_level}</span>`);
+        logTerminal(`[Sensors] Pressure: ${(data.sensors.pressure_psi * 0.0689476).toFixed(2)} bar (${data.sensors.pressure_psi} PSI) | Strain: ${data.sensors.strain_microstrain} µε | Vibration: ${data.sensors.vibration_rms_mm_s} mm/s`);
+      });
+
+      currentEventSource.addEventListener('segment', (e) => {
+        const data = JSON.parse(e.data);
+        setNodeStatus('segment', 'done');
+        setNodeStatus('reasoning', 'active');
+        playBeep(640, 0.08);
+
+        document.getElementById('stream-status').textContent = 'DEFECT SEGMENTED';
+        document.getElementById('stat-defect-count').textContent = data.defect_count;
+        document.getElementById('stat-defect-area').textContent = data.total_defect_area_pct.toFixed(2) + '%';
+        
+        // SAM badge: from segmentation.backend ("sam2" green, "classical-fallback" amber)
+        const samBadge = document.getElementById('sam-badge');
+        const samLabel = document.getElementById('sam-badge-label');
+        if (data.backend === 'sam2') {
+          samBadge.className = "flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-slate-900/90 border border-emerald-500/50 text-emerald-300 shadow-sm";
+          samBadge.querySelector('.dot').className = "dot w-2 h-2 rounded-full bg-emerald-400";
+          samLabel.textContent = "LIVE: SAM 2";
+          document.getElementById('backend-indicator').textContent = "BACKEND: SAM 2";
+        } else {
+          samBadge.className = "flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-slate-900/90 border border-amber-500/50 text-amber-300 shadow-sm";
+          samBadge.querySelector('.dot').className = "dot w-2 h-2 rounded-full bg-amber-400";
+          samLabel.textContent = "CLASSICAL-FALLBACK (simulated)";
+          document.getElementById('backend-indicator').textContent = "BACKEND: CV (simulated)";
+        }
+
+        maskImageUrl = data.mask_url;
+        if (currentVisionMode === 'sam') {
+          document.getElementById('inspection-img').src = maskImageUrl;
+        }
+
+        if (data.defect_count > 0) {
+          const d0 = data.defects[0];
+          document.getElementById('defect-tag').classList.remove('hidden');
+          document.getElementById('defect-type-label').textContent = `${(d0.defect_type || 'ANOMALY').toUpperCase()} (simulated)`;
+          document.getElementById('defect-meta-label').textContent = `Area: ${d0.surface_area_pct}%`;
+        }
+
+        logTerminal(`[SegmentDefect] Backend: <span class="font-bold">${data.backend}</span> | Defect Count: ${data.defect_count} | Total Damage Area: ${data.total_defect_area_pct.toFixed(2)}%`, 'cyan');
+      });
+
+      currentEventSource.addEventListener('reasoning', (e) => {
+        const data = JSON.parse(e.data);
+        setNodeStatus('reasoning', 'done');
+        setNodeStatus('action', 'active');
+        playBeep(760, 0.09);
+
+        document.getElementById('stream-status').textContent = 'SPATIAL REASONING';
+        
+        // Muse badge: green "LIVE: <model id>" only if llm_provider is baseten/huggingface/custom; amber "MOCK FALLBACK" if mock
+        const museBadge = document.getElementById('muse-badge');
+        const museLabel = document.getElementById('muse-badge-label');
+        if (data.llm_provider && data.llm_provider !== 'mock') {
+          museBadge.className = "flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-slate-900/90 border border-emerald-500/50 text-emerald-300 shadow-sm";
+          museBadge.querySelector('.dot').className = "dot w-2 h-2 rounded-full bg-emerald-400";
+          museLabel.textContent = `LIVE: ${data.model}`;
+        } else {
+          museBadge.className = "flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-slate-900/90 border border-amber-500/50 text-amber-300 shadow-sm";
+          museBadge.querySelector('.dot').className = "dot w-2 h-2 rounded-full bg-amber-400";
+          museLabel.textContent = "MOCK FALLBACK (simulated)";
+        }
+
+        // Severity badge
+        const sevEl = document.getElementById('severity-badge');
+        sevEl.textContent = data.severity;
+        if (data.severity === 'CRITICAL') {
+          sevEl.className = 'px-2 py-0.5 rounded font-bold bg-red-600 text-white border border-red-400 animate-pulse';
+        } else if (data.severity === 'HIGH') {
+          sevEl.className = 'px-2 py-0.5 rounded font-bold bg-amber-600 text-white border border-amber-400';
+        } else {
+          sevEl.className = 'px-2 py-0.5 rounded font-bold bg-emerald-600 text-white border border-emerald-400';
+        }
+
+        logTerminal(`[SpatialReasoning] Provider: <span class="font-bold">${data.llm_provider || 'mock'}</span> | Severity: <span class="font-bold">${data.severity}</span>`, 'blue');
+        logTerminal(`[Reasoning Output] "${data.reasoning}"`);
+        
+        if (data.recommended_actions && data.recommended_actions.length) {
+          logTerminal(`[Directives] ${data.recommended_actions.slice(0, 2).join(' | ')}`);
+        }
+
+        // Trigger HITL Modal if Critical
+        if (data.requires_hitl) {
+          playBeep(900, 0.25, 'sawtooth');
+          showHitlModal(data);
+        }
+      });
+
+      currentEventSource.addEventListener('action', (e) => {
+        const data = JSON.parse(e.data);
+        setNodeStatus('action', 'done');
+        setNodeStatus('verify', 'active');
+        playBeep(620, 0.08);
+
+        document.getElementById('stream-status').textContent = `DISPATCHING (ITER ${data.iteration})`;
+        document.getElementById('action-count').textContent = `${data.actions.length} active`;
+
+        const container = document.getElementById('actions-container');
+        container.innerHTML = '';
+        data.actions.forEach(a => {
+          const row = document.createElement('div');
+          row.className = 'flex items-center justify-between p-1 rounded bg-scada-900 border border-scada-800 text-[10px]';
+          row.innerHTML = `
+            <span class="text-slate-300"><span class="text-cyan-400 font-bold">🤖 ${a.action}</span> → ${a.target}</span>
+            <span class="text-emerald-400 font-bold uppercase">[${a.status}]</span>
+          `;
+          container.appendChild(row);
+        });
+
+        logTerminal(`[DispatchAction] Iteration ${data.iteration}: Dispatched ${data.actions.length} countermeasures [${data.authorization_status}]`, 'emerald');
+      });
+
+      currentEventSource.addEventListener('verify', (e) => {
+        const data = JSON.parse(e.data);
+        playBeep(data.recovery_confirmed ? 800 : 400, 0.1);
+
+        // Update post-action sensors in real units
+        if (data.post_sensors) {
+          updateSensors(data.post_sensors);
+          // Plot real verify point on chart (real units, no scaling hacks)
+          if (telemetryChart) {
+            const barVal = +(data.post_sensors.pressure_psi * 0.0689476).toFixed(2);
+            telemetryChart.data.labels.push(`Verify (${data.retry_count})`);
+            telemetryChart.data.datasets[0].data.push(barVal);
+            telemetryChart.data.datasets[1].data.push(data.post_sensors.strain_microstrain);
+            telemetryChart.data.datasets[2].data.push(data.post_sensors.vibration_rms_mm_s);
+            telemetryChart.update();
+          }
+        }
+
+        // Update status badge from real limit ratios or risk level
+        updateStatusBadge(data.risk_level, data.limit_ratios);
+
+        if (data.recovery_confirmed) {
+          setNodeStatus('verify', 'done');
+          document.getElementById('stream-status').textContent = 'RECOVERY VERIFIED';
+          logTerminal(`[VerifyRecovery] ✅ <span class="text-emerald-400 font-bold">${data.message}</span> (Iteration ${data.retry_count}/${data.max_retries})`, 'emerald');
+        } else {
+          document.getElementById('stream-status').textContent = `RETRYING (${data.retry_count}/${data.max_retries})`;
+          setNodeStatus('verify', 'idle');
+          setNodeStatus('action', 'active');
+          logTerminal(`[VerifyRecovery] ⚠ <span class="text-amber-400">${data.message}</span>`, 'amber');
+        }
+      });
+
+      currentEventSource.addEventListener('complete', (e) => {
+        const data = JSON.parse(e.data);
+        clearInterval(stopwatchInterval);
+        playBeep(980, 0.15);
+
+        document.getElementById('stream-status').textContent = 'PIPELINE FINISHED';
+        document.getElementById('chart-state-msg').textContent = 'CONVERGED';
+        logTerminal(`[Complete] 🏁 Inspection pipeline finished in <span class="text-cyan-400 font-bold">${data.elapsed_seconds}s</span>.`, 'cyan');
+
+        btnRun.disabled = false;
+        btnRun.innerHTML = `<i data-lucide="zap" class="w-4 h-4 fill-current"></i><span>Run Closed-Loop Inspection</span>`;
+        lucide.createIcons();
+        currentEventSource.close();
+      });
+
+      currentEventSource.onerror = (err) => {
+        clearInterval(stopwatchInterval);
+        btnRun.disabled = false;
+        btnRun.innerHTML = `<i data-lucide="zap" class="w-4 h-4 fill-current"></i><span>Run Closed-Loop Inspection</span>`;
+        lucide.createIcons();
+        document.getElementById('stream-status').textContent = 'STREAM COMPLETED';
+        currentEventSource.close();
+      };
+    }
+
+    // Update gauges with real units
+    function updateSensors(s) {
+      if (!s) return;
+      if (s.pressure_psi !== undefined) {
+        const bar = (s.pressure_psi * 0.0689476).toFixed(2);
+        document.getElementById('val-pressure').textContent = bar;
+        document.getElementById('bar-pressure').style.width = Math.min(100, Math.round((bar / 6.0) * 100)) + '%';
+      }
+      if (s.strain_microstrain !== undefined) {
+        document.getElementById('val-strain').textContent = s.strain_microstrain.toFixed(1);
+        document.getElementById('bar-strain').style.width = Math.min(100, Math.round((s.strain_microstrain / 400) * 100)) + '%';
+      }
+      if (s.vibration_rms_mm_s !== undefined) {
+        document.getElementById('val-vibration').textContent = s.vibration_rms_mm_s.toFixed(2);
+        document.getElementById('bar-vibration').style.width = Math.min(100, Math.round((s.vibration_rms_mm_s / 10) * 100)) + '%';
+      }
+      if (s.temperature_c !== undefined) {
+        document.getElementById('val-temp').textContent = s.temperature_c.toFixed(1) + ' °C';
+      }
+      if (s.humidity_pct !== undefined) {
+        document.getElementById('val-humidity').textContent = s.humidity_pct.toFixed(1) + ' %';
+      }
+      if (s.acoustic_emission_db !== undefined) {
+        document.getElementById('val-acoustic').textContent = s.acoustic_emission_db.toFixed(1) + ' dB';
+      }
+    }
+
+    // Status badge dynamically derived from real limit ratios or risk_level
+    function updateStatusBadge(risk, limitRatios) {
+      const el = document.getElementById('twin-status-badge');
+      if (!el) return;
+      const ratioStr = limitRatios ? ` (r=${limitRatios.max_ratio})` : '';
+
+      if (risk === 'CRITICAL') {
+        el.className = 'px-2 py-0.5 rounded text-[10px] font-mono bg-red-950 border border-red-700 text-red-300 flex items-center space-x-1';
+        el.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping"></span><span>CRITICAL${ratioStr}</span>`;
+      } else if (risk === 'WARNING') {
+        el.className = 'px-2 py-0.5 rounded text-[10px] font-mono bg-amber-950 border border-amber-700 text-amber-300 flex items-center space-x-1';
+        el.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span><span>WARNING${ratioStr}</span>`;
+      } else {
+        el.className = 'px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-950 border border-emerald-700 text-emerald-300 flex items-center space-x-1';
+        el.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span><span>STABLE${ratioStr}</span>`;
+      }
+    }
+
+    // HITL Modal Handling
+    function showHitlModal(data) {
+      document.getElementById('hitl-threat').textContent = `${data.severity} STRUCTURAL DEFECT`;
+      document.getElementById('hitl-modal').classList.remove('hidden');
+    }
+
+    function closeHitlModal() {
+      document.getElementById('hitl-modal').classList.add('hidden');
+    }
+
+    async function confirmHitlAuthorization() {
+      playBeep(1050, 0.18);
+      closeHitlModal();
+      logTerminal(`[HITL] Commander authorization granted for high-severity mitigation.`, 'emerald');
+
+      try {
+        await fetch('/api/approve-action', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            scenario: currentScenario,
+            authorized_by: 'Mission Commander',
+            notes: 'Authorized via mission control HUD.'
+          })
+        });
+      } catch (e) {}
+    }
+
+    // Ping diagnostic health
+    async function pingHealth() {
+      playBeep(720, 0.05);
+      try {
+        const res = await fetch('/api/status');
+        const data = await res.json();
+        logTerminal(`[Diagnostic] Status: <span class="text-emerald-400 font-bold">${data.status.toUpperCase()}</span> | Muse Spark: ${data.providers.llm.online ? 'Online' : 'Offline'} | SAM 2: Active`);
+      } catch (e) {
+        logTerminal(`[Diagnostic] Server responded with error: ${e.message}`, 'red');
+      }
+    }
+  </script>
+</body>
+</html>
