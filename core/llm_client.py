@@ -163,9 +163,23 @@ class MetaLLMClient:
             }
         """)
 
+        # Sanitize defect report to exclude bulky binary/base64/contour payload from prompt
+        clean_defects = []
+        for d in defect_report.get("defects", []):
+            d_clean = {k: v for k, v in d.items() if k not in ("contour_points", "mask_b64")}
+            clean_defects.append(d_clean)
+
+        clean_report = {
+            "defect_count": defect_report.get("defect_count", len(clean_defects)),
+            "total_defect_area_pct": defect_report.get("total_defect_area_pct", 0.0),
+            "backend": defect_report.get("backend", "classical-fallback"),
+            "image_resolution": defect_report.get("image_resolution", [640, 480]),
+            "defects": clean_defects,
+        }
+
         user_prompt = (
             f"## Visual Defect Report\n```json\n"
-            f"{json.dumps(defect_report, indent=2)}\n```\n\n"
+            f"{json.dumps(clean_report, indent=2)}\n```\n\n"
             f"## Live Sensor Telemetry\n```json\n"
             f"{json.dumps(sensor_readings, indent=2)}\n```"
         )

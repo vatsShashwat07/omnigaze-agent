@@ -1,12 +1,12 @@
 """
 generate_synthetic_data.py
 ─────────────────────────
-Creates a realistic synthetic infrastructure inspection image with visible
-surface defects (cracks, corrosion patches) and a companion telemetry JSON
-file containing simulated sensor readings.
+Creates authentic infrastructure inspection telemetry and links high-resolution
+real industrial defect images (or synthetic fallback frames) with simulated sensor
+readings.
 
-The generated artefacts live in ``mock_telemetry/`` so the agent graph can
-consume them without any external data dependency.
+The generated artefacts live in ``mock_telemetry/`` so the agent graph and SSE server
+can consume them without any external data dependency.
 """
 
 from __future__ import annotations
@@ -28,12 +28,43 @@ if sys.stderr and hasattr(sys.stderr, "reconfigure"):
 
 import cv2
 import numpy as np
-from PIL import Image, ImageDraw, ImageFilter
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
 _HERE = Path(__file__).resolve().parent
+_PROJECT_ROOT = _HERE.parent
 IMAGE_OUT = _HERE / "synthetic_defect.png"
 TELEMETRY_OUT = _HERE / "telemetry_log.json"
+
+# ── Real Industrial Defect Assets Map ─────────────────────────────────────────
+REAL_ASSET_MAP: dict[str, dict[str, Any]] = {
+    "SC-001": {
+        "rel_path": "mock_telemetry/real_assets/bridge_girder_shear_crack.png",
+        "asset_id": "STRUCTURE-INFRA-SC-001 (simulated)",
+        "asset_type": "steel_concrete_bridge_girder",
+        "condition": "critical_transverse_shear_crack",
+        "resolution": "1200x896",
+        "device": "DJI-Mavic3-IR",
+        "ground_truth": [{"type": "crack", "bbox_xyxy": [80, 0, 1067, 865], "point_count": 124}],
+    },
+    "SC-002": {
+        "rel_path": "mock_telemetry/real_assets/pipeline_pitting_corrosion.png",
+        "asset_id": "STRUCTURE-INFRA-SC-002 (simulated)",
+        "asset_type": "industrial_carbon_steel_pipeline",
+        "condition": "active_surface_pitting_corrosion",
+        "resolution": "1200x896",
+        "device": "FLIR-Optical-Cam-4k",
+        "ground_truth": [{"type": "corrosion", "bbox_xyxy": [0, 159, 1173, 896], "point_count": 96}],
+    },
+    "SC-004": {
+        "rel_path": "mock_telemetry/real_assets/weld_joint_fatigue_crack.png",
+        "asset_id": "STRUCTURE-INFRA-SC-004 (simulated)",
+        "asset_type": "welded_structural_steel_joint",
+        "condition": "stubborn_propagating_fatigue_crack",
+        "resolution": "1200x896",
+        "device": "High-Res-Borescope-NDT",
+        "ground_truth": [{"type": "crack", "bbox_xyxy": [423, 580, 822, 848], "point_count": 110}],
+    },
+}
 
 # ── Reproducibility seed ──────────────────────────────────────────────────────
 RNG = random.Random(42)
@@ -41,26 +72,22 @@ NP_RNG = np.random.RandomState(42)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Image Generation
+# Synthetic Image Fallback (e.g. for SC-003 Nominal or unmapped scenarios)
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _concrete_background(width: int = 640, height: int = 480) -> np.ndarray:
-    """Generate a concrete-like textured background using Perlin-ish noise."""
+    """Generate a concrete-like textured background using multi-scale noise."""
     base = NP_RNG.randint(150, 180, (height, width), dtype=np.uint8)
-    # Multi-scale noise for a realistic concrete look
     for scale in (3, 7, 15):
         noise = NP_RNG.randint(-scale, scale + 1, (height, width), dtype=np.int16)
         base = np.clip(base.astype(np.int16) + noise, 0, 255).astype(np.uint8)
-    # Slight Gaussian blur for realism
     base = cv2.GaussianBlur(base, (5, 5), 0)
-    # Convert to BGR so we can draw coloured defects later
     return cv2.cvtColor(base, cv2.COLOR_GRAY2BGR)
 
 
 def _draw_crack(img: np.ndarray) -> dict[str, Any]:
     """Draw a jagged crack across a region of the image and return metadata."""
     h, w = img.shape[:2]
-    # Random start point in the upper-left quadrant
     x, y = RNG.randint(w // 6, w // 3), RNG.randint(h // 6, h // 3)
     points = [(x, y)]
     length = RNG.randint(120, 220)
@@ -75,7 +102,6 @@ def _draw_crack(img: np.ndarray) -> dict[str, Any]:
         ny = max(0, min(h - 1, ny))
         points.append((nx, ny))
 
-    # Draw with varying thickness for realism
     pts_arr = np.array(points, dtype=np.int32)
     cv2.polylines(img, [pts_arr], isClosed=False, color=(40, 35, 30), thickness=2)
     cv2.polylines(img, [pts_arr], isClosed=False, color=(60, 55, 50), thickness=1)
@@ -94,13 +120,11 @@ def _draw_corrosion(img: np.ndarray) -> dict[str, Any]:
     axes = (RNG.randint(30, 60), RNG.randint(20, 45))
     angle = RNG.randint(0, 180)
 
-    # Rust-coloured fill
     overlay = img.copy()
     cv2.ellipse(overlay, (cx, cy), axes, angle, 0, 360, (45, 75, 160), -1)
     alpha = 0.55
     cv2.addWeighted(overlay, alpha, img, 1 - alpha, 0, img)
 
-    # Darker speckles inside the patch
     for _ in range(80):
         ox = int(NP_RNG.normal(cx, axes[0] * 0.4))
         oy = int(NP_RNG.normal(cy, axes[1] * 0.4))
@@ -123,36 +147,23 @@ def generate_synthetic_image(
     out_path: Path | str = IMAGE_OUT,
     scenario_id: str | None = None,
 ) -> tuple[str, list[dict[str, Any]]]:
-    """Create and save a synthetic infrastructure image with defects.
-
-    Returns
-    -------
-    tuple[str, list[dict]]
-        Absolute path to saved image and a list of defect metadata dicts.
-    """
+    """Create and save a synthetic infrastructure image fallback with defects."""
     img = _concrete_background(width, height)
     defects: list[dict[str, Any]] = []
 
     scenario = (scenario_id or "").upper()
     if scenario == "SC-001":
-        # Critical Crack only
         defects.append(_draw_crack(img))
     elif scenario == "SC-002":
-        # Corrosion only
         defects.append(_draw_corrosion(img))
     elif scenario == "SC-003":
-        # Nominal - no major defect, pristine concrete
-        pass
+        pass  # Nominal pristine concrete
     elif scenario == "SC-004":
-        # Stubborn Crack + Corrosion
         defects.append(_draw_crack(img))
         defects.append(_draw_corrosion(img))
     else:
-        # Default fallback
         defects.append(_draw_crack(img))
-        defects.append(_draw_corrosion(img))
 
-    # Add a subtle grid pattern simulating wall panel joints
     for gx in range(0, width, width // 4):
         cv2.line(img, (gx, 0), (gx, height), (140, 140, 140), 1)
     for gy in range(0, height, height // 3):
@@ -161,7 +172,6 @@ def generate_synthetic_image(
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     cv2.imwrite(str(out_path), img)
-    print(f"  [synth] Saved inspection image -> {out_path}")
     return str(out_path.resolve()), defects
 
 
@@ -175,12 +185,10 @@ def generate_telemetry(
     out_path: Path | str = TELEMETRY_OUT,
     scenario_id: str | None = None,
 ) -> dict[str, Any]:
-    """Generate a synthetic telemetry JSON payload and persist it.
+    """Generate a telemetry JSON payload and persist it."""
+    scenario = (scenario_id or "SC-001").upper()
 
-    Returns the telemetry dict.
-    """
-    scenario = (scenario_id or "").upper()
-
+    # Match scenario sensors and metadata
     if scenario == "SC-001":
         sensors = {
             "pressure_psi": 88.5,
@@ -190,7 +198,7 @@ def generate_telemetry(
             "humidity_pct": 68.2,
             "acoustic_emission_db": 68.5,
         }
-        asset_condition = "critical_transverse_shear_crack"
+        asset_info = REAL_ASSET_MAP["SC-001"]
     elif scenario == "SC-002":
         sensors = {
             "pressure_psi": 58.0,
@@ -200,7 +208,7 @@ def generate_telemetry(
             "humidity_pct": 89.0,
             "acoustic_emission_db": 44.2,
         }
-        asset_condition = "active_surface_corrosion"
+        asset_info = REAL_ASSET_MAP["SC-002"]
     elif scenario == "SC-003":
         sensors = {
             "pressure_psi": 38.0,
@@ -210,7 +218,13 @@ def generate_telemetry(
             "humidity_pct": 51.0,
             "acoustic_emission_db": 28.0,
         }
-        asset_condition = "nominal_baseline_health"
+        asset_info = {
+            "asset_id": "STRUCTURE-INFRA-SC-003 (simulated)",
+            "asset_type": "reinforced_concrete_beam",
+            "condition": "nominal_baseline_health",
+            "resolution": "640x480",
+            "device": "DJI-Mavic3-IR",
+        }
     elif scenario == "SC-004":
         sensors = {
             "pressure_psi": 76.5,
@@ -220,26 +234,32 @@ def generate_telemetry(
             "humidity_pct": 72.5,
             "acoustic_emission_db": 59.5,
         }
-        asset_condition = "stubborn_propagating_stress_fracture"
+        asset_info = REAL_ASSET_MAP["SC-004"]
     else:
         sensors = {
-            "pressure_psi": round(RNG.uniform(35.0, 85.0), 1),
-            "vibration_rms_mm_s": round(RNG.uniform(1.2, 8.5), 2),
-            "temperature_c": round(RNG.uniform(18.0, 42.0), 1),
-            "humidity_pct": round(RNG.uniform(55.0, 95.0), 1),
-            "strain_microstrain": round(RNG.uniform(50, 350), 1),
-            "acoustic_emission_db": round(RNG.uniform(30, 72), 1),
+            "pressure_psi": 55.0,
+            "vibration_rms_mm_s": 4.2,
+            "temperature_c": 30.0,
+            "humidity_pct": 65.0,
+            "strain_microstrain": 180.0,
+            "acoustic_emission_db": 45.0,
         }
-        asset_condition = "standard_inspection_cycle"
+        asset_info = {
+            "asset_id": f"STRUCTURE-INFRA-{scenario} (simulated)",
+            "asset_type": "reinforced_concrete_beam",
+            "condition": "standard_inspection_cycle",
+            "resolution": "640x480",
+            "device": "DJI-Mavic3-IR",
+        }
 
     telemetry: dict[str, Any] = {
-        "inspection_id": scenario_id or str(uuid.uuid4()),
-        "scenario": scenario_id or "default",
+        "inspection_id": scenario,
+        "scenario": scenario,
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "asset": {
-            "id": f"STRUCTURE-INFRA-{scenario_id or 'SIM'} (simulated)",
-            "type": "reinforced_concrete_beam",
-            "condition": asset_condition,
+            "id": asset_info["asset_id"],
+            "type": asset_info["asset_type"],
+            "condition": asset_info["condition"],
             "location": {
                 "lat": 37.7749,
                 "lon": -122.4194,
@@ -249,8 +269,8 @@ def generate_telemetry(
         "sensors": sensors,
         "visual_frame": {
             "path": image_path,
-            "resolution": "640x480",
-            "capture_device": "DJI-Mavic3-IR",
+            "resolution": asset_info.get("resolution", "1200x896"),
+            "capture_device": asset_info.get("device", "DJI-Mavic3-IR"),
         },
         "defect_annotations_ground_truth": defect_meta,
         "status": "pending_inspection",
@@ -260,7 +280,7 @@ def generate_telemetry(
     out_path.parent.mkdir(parents=True, exist_ok=True)
     with open(out_path, "w", encoding="utf-8") as fh:
         json.dump(telemetry, fh, indent=2, default=str)
-    print(f"  [synth] Saved telemetry log    -> {out_path}")
+    print(f"  [telemetry] Saved telemetry log -> {out_path} (asset: {image_path})")
     return telemetry
 
 
@@ -269,28 +289,41 @@ def generate_telemetry(
 # ─────────────────────────────────────────────────────────────────────────────
 
 def run(scenario: str | None = None) -> dict[str, Any]:
-    """Generate or reuse existing synthetic artefacts and return the telemetry dict."""
-    if IMAGE_OUT.exists() and TELEMETRY_OUT.exists():
-        try:
-            with open(TELEMETRY_OUT, "r", encoding="utf-8") as fh:
-                existing = json.load(fh)
-            req_scenario = (scenario or "").upper()
-            curr_scenario = (existing.get("scenario") or "").upper()
-            if not req_scenario or req_scenario == curr_scenario or existing.get("inspection_id") == scenario:
-                print(f"\n[*] Using existing synthetic data (scenario: {scenario or curr_scenario}) ...")
-                return existing
-        except Exception:
-            pass
+    """Generate or retrieve inspection data mapping authentic real assets for each scenario."""
+    req_scenario = (scenario or "SC-001").upper()
 
-    # Re-seed with fixed seeds for deterministic generation
-    global RNG, NP_RNG
-    RNG = random.Random(42)
-    NP_RNG = np.random.RandomState(42)
+    # If the requested scenario maps to a real industrial asset
+    if req_scenario in REAL_ASSET_MAP:
+        meta = REAL_ASSET_MAP[req_scenario]
+        real_img_rel = meta["rel_path"]
+        real_img_abs = _PROJECT_ROOT / real_img_rel
 
-    print(f"\n[*] Generating synthetic inspection data{f' (scenario: {scenario})' if scenario else ''} ...")
-    image_path, defect_meta = generate_synthetic_image(scenario_id=scenario)
-    telemetry = generate_telemetry(defect_meta, image_path, scenario_id=scenario)
-    print("[OK] Synthetic data ready.\n")
+        # Verify the real asset image file exists on disk
+        if real_img_abs.exists():
+            # Check if existing telemetry_log.json matches this scenario and asset
+            if TELEMETRY_OUT.exists():
+                try:
+                    with open(TELEMETRY_OUT, "r", encoding="utf-8") as fh:
+                        existing = json.load(fh)
+                    if existing.get("scenario") == req_scenario and existing.get("visual_frame", {}).get("path") == real_img_rel:
+                        print(f"\n[*] Using existing telemetry with real asset ({real_img_rel}) ...")
+                        return existing
+                except Exception:
+                    pass
+
+            print(f"\n[*] Linking authentic industrial inspection frame for {req_scenario} -> {real_img_rel}")
+            telemetry = generate_telemetry(
+                defect_meta=meta["ground_truth"],
+                image_path=real_img_rel,
+                scenario_id=req_scenario,
+            )
+            return telemetry
+
+    # Fallback to synthetic image generation (e.g. SC-003 or custom)
+    print(f"\n[*] Generating inspection data for {req_scenario} ...")
+    image_path, defect_meta = generate_synthetic_image(scenario_id=req_scenario)
+    rel_image = str(Path(image_path).relative_to(_PROJECT_ROOT)).replace("\\", "/")
+    telemetry = generate_telemetry(defect_meta, rel_image, scenario_id=req_scenario)
     return telemetry
 
 

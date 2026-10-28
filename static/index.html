@@ -181,7 +181,7 @@
       <!-- Viewport -->
       <div class="relative flex-1 bg-black flex items-center justify-center overflow-hidden min-h-[300px] scanlines">
         <img id="inspection-img" 
-             src="/mock_telemetry/synthetic_defect.png" 
+             src="/mock_telemetry/real_assets/bridge_girder_shear_crack.png" 
              alt="Inspection View" 
              class="w-full h-full object-contain transition-all duration-300">
 
@@ -531,7 +531,7 @@
     let currentEventSource = null;
     let stopwatchInterval = null;
     let telemetryChart = null;
-    let rawImageUrl = '/mock_telemetry/synthetic_defect.png';
+    let rawImageUrl = '/mock_telemetry/real_assets/bridge_girder_shear_crack.png';
     let maskImageUrl = '/mock_telemetry/annotated_defects.png';
     let currentVisionMode = 'sam';
 
@@ -663,6 +663,19 @@
     function selectScenario(scId) {
       currentScenario = scId;
       playBeep(450, 0.05);
+
+      const scenarioImageMap = {
+        'SC-001': '/mock_telemetry/real_assets/bridge_girder_shear_crack.png',
+        'SC-002': '/mock_telemetry/real_assets/pipeline_pitting_corrosion.png',
+        'SC-003': '/mock_telemetry/synthetic_defect.png',
+        'SC-004': '/mock_telemetry/real_assets/weld_joint_fatigue_crack.png',
+      };
+      if (scenarioImageMap[scId]) {
+        rawImageUrl = scenarioImageMap[scId];
+        if (currentVisionMode === 'raw' || !currentEventSource) {
+          document.getElementById('inspection-img').src = rawImageUrl;
+        }
+      }
 
       document.querySelectorAll('.scenario-btn').forEach(btn => {
         btn.classList.remove('ring-2', 'ring-white', 'scale-105');

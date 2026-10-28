@@ -221,6 +221,20 @@ async def stream_pipeline(
         visual_path = telemetry.get("visual_frame", {}).get("path", "")
         asset = telemetry.get("asset", {})
 
+        # Resolve visual_path to web URL
+        if visual_path:
+            vp = Path(visual_path)
+            if not vp.is_absolute():
+                raw_web_url = f"/{vp.as_posix().lstrip('/')}"
+            else:
+                try:
+                    rel = vp.relative_to(_PROJECT_ROOT)
+                    raw_web_url = f"/{rel.as_posix()}"
+                except Exception:
+                    raw_web_url = f"/mock_telemetry/real_assets/{vp.name}" if "real_assets" in str(vp) else f"/mock_telemetry/{vp.name}"
+        else:
+            raw_web_url = "/mock_telemetry/synthetic_defect.png"
+
         # Calculate limit ratios for honest status evaluation
         vib_limit = 3.0
         strain_limit = 150.0
@@ -252,7 +266,7 @@ async def stream_pipeline(
                     "max_ratio": max_r,
                 },
                 "risk_level": initial_risk,
-                "image_url": f"/mock_telemetry/synthetic_defect.png?t={ts}",
+                "image_url": f"{raw_web_url}?t={ts}",
                 "timestamp": telemetry.get("timestamp"),
             }),
         }
@@ -276,7 +290,8 @@ async def stream_pipeline(
                 "total_defect_area_pct": round(seg_dict.get("total_defect_area_pct", 0.0), 4),
                 "defects": seg_dict.get("defects", []),
                 "mask_url": f"/mock_telemetry/annotated_defects.png?t={int(time.time() * 1000)}",
-                "raw_image_url": f"/mock_telemetry/synthetic_defect.png?t={int(time.time() * 1000)}",
+                "raw_image_url": f"{raw_web_url}?t={int(time.time() * 1000)}",
+                "overlay_b64": seg_dict.get("overlay_b64", ""),
             }),
         }
 
