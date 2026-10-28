@@ -1,11 +1,11 @@
 {
-  "inspection_id": "SC-001",
-  "scenario": "SC-001",
-  "timestamp": "2026-10-28T18:52:31.432029+00:00",
+  "inspection_id": "SC-004",
+  "scenario": "SC-004",
+  "timestamp": "2026-10-28T19:15:44.645022+00:00",
   "asset": {
-    "id": "STRUCTURE-INFRA-SC-001 (simulated)",
-    "type": "steel_concrete_bridge_girder",
-    "condition": "critical_transverse_shear_crack",
+    "id": "STRUCTURE-INFRA-SC-004 (simulated)",
+    "type": "welded_structural_steel_joint",
+    "condition": "stubborn_propagating_fatigue_crack",
     "location": {
       "lat": 37.7749,
       "lon": -122.4194,
@@ -13,28 +13,28 @@
     }
   },
   "sensors": {
-    "pressure_psi": 88.5,
-    "strain_microstrain": 342.0,
-    "vibration_rms_mm_s": 7.95,
-    "temperature_c": 39.4,
-    "humidity_pct": 68.2,
-    "acoustic_emission_db": 68.5
+    "pressure_psi": 76.5,
+    "strain_microstrain": 288.0,
+    "vibration_rms_mm_s": 6.45,
+    "temperature_c": 33.2,
+    "humidity_pct": 72.5,
+    "acoustic_emission_db": 59.5
   },
   "visual_frame": {
-    "path": "mock_telemetry/real_assets/bridge_girder_shear_crack.png",
+    "path": "mock_telemetry/real_assets/weld_joint_fatigue_crack.png",
     "resolution": "1200x896",
-    "capture_device": "DJI-Mavic3-IR"
+    "capture_device": "High-Res-Borescope-NDT"
   },
   "defect_annotations_ground_truth": [
     {
       "type": "crack",
       "bbox_xyxy": [
-        80,
-        0,
-        1067,
-        865
+        423,
+        580,
+        822,
+        848
       ],
-      "point_count": 124
+      "point_count": 110
     }
   ],
   "status": "pending_inspection"

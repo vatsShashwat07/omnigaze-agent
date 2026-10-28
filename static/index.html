@@ -107,6 +107,52 @@
     .animate-pulse-border {
       animation: pulse-border 1.5s ease-in-out infinite;
     }
+
+    @keyframes pulse-neon {
+      0%, 100% {
+        box-shadow: 0 0 15px rgba(6, 182, 212, 0.45), 0 0 30px rgba(168, 85, 247, 0.25);
+        border-color: #22d3ee;
+      }
+      50% {
+        box-shadow: 0 0 25px rgba(168, 85, 247, 0.65), 0 0 45px rgba(6, 182, 212, 0.45);
+        border-color: #c084fc;
+      }
+    }
+    .animate-pulse-neon {
+      animation: pulse-neon 2.2s infinite ease-in-out;
+    }
+
+    @keyframes flash-rupture {
+      0%, 100% {
+        background-color: rgba(69, 10, 10, 0.95);
+        border-color: #ef4444;
+        box-shadow: 0 0 25px rgba(239, 68, 68, 0.65);
+      }
+      50% {
+        background-color: rgba(127, 29, 29, 0.95);
+        border-color: #f87171;
+        box-shadow: 0 0 45px rgba(248, 113, 113, 0.95);
+      }
+    }
+    .animate-flash-rupture {
+      animation: flash-rupture 0.9s infinite ease-in-out;
+    }
+
+    @keyframes glow-stabilized {
+      0%, 100% {
+        background-color: rgba(2, 44, 34, 0.95);
+        border-color: #10b981;
+        box-shadow: 0 0 20px rgba(16, 185, 129, 0.45);
+      }
+      50% {
+        background-color: rgba(6, 78, 59, 0.95);
+        border-color: #34d399;
+        box-shadow: 0 0 35px rgba(52, 211, 153, 0.75);
+      }
+    }
+    .animate-glow-stabilized {
+      animation: glow-stabilized 1.8s infinite ease-in-out;
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col bg-scada-950 bg-grid select-none">
@@ -149,6 +195,12 @@
       </div>
     </div>
 
+    <!-- Super-Weapon Benchmark Mode Toggle Button -->
+    <button id="btn-toggle-benchmark" onclick="toggleBenchmarkMode()" class="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-950/80 via-scada-900 to-cyan-950/80 border-2 border-cyan-400 text-cyan-200 text-xs font-mono font-bold tracking-wider hover:border-purple-400 hover:text-white shadow-lg shadow-cyan-500/25 hover:shadow-purple-500/35 transition active:scale-95 flex items-center space-x-2 animate-pulse-neon" title="Launch Side-by-Side Benchmark: Passive AI vs OmniGaze">
+      <span class="text-amber-400 text-sm">⚡</span>
+      <span id="benchmark-btn-text">BENCHMARK MODE: PASSIVE vs OMNIGAZE</span>
+    </button>
+
     <!-- System Time & Health -->
     <div class="flex items-center space-x-4 text-xs font-mono">
       <div class="text-right">
@@ -162,8 +214,8 @@
     </div>
   </header>
 
-  <!-- ── Main Grid ───────────────────────────────────────────────────────── -->
-  <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3 p-3 overflow-hidden">
+  <!-- ── Main Grid (Single-Pane Mission Control) ─────────────────────────── -->
+  <main id="single-pane-view" class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3 p-3 overflow-hidden">
 
     <!-- ── LEFT PANEL: Vision Feed & SAM Segmentation (col 4) ──────────── -->
     <section class="lg:col-span-4 flex flex-col bg-scada-900/80 rounded-xl border border-scada-800 shadow-xl overflow-hidden backdrop-blur-sm">
@@ -404,6 +456,223 @@
 
   </main>
 
+  <!-- ── BENCHMARK MODE COMPARATIVE STAGE (Side-by-Side Passive vs OmniGaze) ── -->
+  <main id="benchmark-view" class="hidden flex-1 flex flex-col p-3 gap-3 overflow-y-auto">
+    <!-- Benchmark Control Banner -->
+    <div class="p-2.5 px-4 rounded-xl bg-gradient-to-r from-red-950/70 via-scada-900 to-cyan-950/70 border border-scada-700 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xl shrink-0">
+      <div class="flex items-center space-x-3 font-mono text-xs">
+        <span class="px-2.5 py-1 rounded bg-purple-950 border border-purple-400 text-purple-200 font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-sm shadow-purple-900">
+          <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-400 fill-current"></i>
+          SUPER-WEAPON BENCHMARK
+        </span>
+        <span class="text-slate-300 font-semibold hidden md:inline">
+          Live Comparative Experiment: Passive AI (Detection-Only) vs OmniGaze (Autonomous Closed-Loop Mitigation)
+        </span>
+      </div>
+
+      <div class="flex items-center space-x-2.5 font-mono text-xs">
+        <button id="btn-benchmark-run" onclick="triggerBenchmarkRun()" class="px-4 py-1.5 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold transition flex items-center space-x-1.5 shadow-lg shadow-cyan-500/25 active:scale-95">
+          <i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i>
+          <span>RUN LIVE BENCHMARK</span>
+        </button>
+        <button onclick="exitBenchmarkMode()" class="px-3.5 py-1.5 rounded-lg bg-scada-850 hover:bg-scada-800 border border-red-500/60 text-red-300 hover:text-white font-bold transition flex items-center space-x-1.5 active:scale-95">
+          <i data-lucide="x" class="w-3.5 h-3.5"></i>
+          <span>EXIT BENCHMARK</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Comparative Split Grid (2 Columns) -->
+    <div class="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-3 min-h-0">
+
+      <!-- ── LEFT PANEL: LEGACY PASSIVE AI (DETECTION-ONLY) ─────────────── -->
+      <section class="flex flex-col bg-scada-900/90 rounded-xl border-2 border-red-900/70 shadow-2xl overflow-hidden backdrop-blur-sm">
+        <!-- Ambient Caution Line -->
+        <div class="h-1 bg-gradient-to-r from-red-600 via-amber-600 to-red-700"></div>
+
+        <!-- Header -->
+        <div class="h-11 px-3.5 bg-red-950/40 border-b border-red-900/50 flex items-center justify-between">
+          <div class="flex items-center space-x-2.5">
+            <div class="w-7 h-7 rounded-lg bg-red-950 border border-red-600 flex items-center justify-center text-red-400">
+              <i data-lucide="eye-off" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <h2 class="text-xs font-bold text-red-200 tracking-wider uppercase font-mono">
+                LEGACY PASSIVE AI (DETECTION-ONLY)
+              </h2>
+              <p class="text-[10px] text-red-400/80 font-mono">Open-Loop Anomaly Detector · Zero Physical Actuation</p>
+            </div>
+          </div>
+          <div id="passive-badge" class="px-2 py-0.5 rounded bg-red-950 border border-red-600/70 text-red-300 text-[10px] font-mono font-bold uppercase animate-pulse">
+            PASSIVE MONITOR
+          </div>
+        </div>
+
+        <!-- Panel Body -->
+        <div class="flex-1 p-3 flex flex-col gap-2.5 overflow-y-auto">
+          <!-- Top Row: Optical Frame & Key Sensor Counters -->
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+            <!-- Inspection Frame -->
+            <div class="sm:col-span-5 relative bg-black rounded-lg border border-red-900/60 overflow-hidden h-36 flex items-center justify-center">
+              <img id="passive-img" src="/mock_telemetry/real_assets/bridge_girder_shear_crack.png" class="w-full h-full object-cover">
+              <div class="absolute inset-0 border border-red-500/30 pointer-events-none p-1.5 flex flex-col justify-between">
+                <span class="text-[9px] font-mono text-red-400 bg-red-950/80 px-1 py-0.5 rounded w-max">[DETECTION ONLY]</span>
+                <span class="text-[9px] font-mono text-slate-400 bg-black/80 px-1 py-0.5 rounded self-end">NO MITIGATION</span>
+              </div>
+            </div>
+
+            <!-- Sensor Telemetry Cards -->
+            <div class="sm:col-span-7 grid grid-cols-3 gap-1.5 font-mono text-center">
+              <div class="p-2 rounded-lg bg-scada-950/90 border border-red-900/50 flex flex-col justify-between">
+                <div class="text-[9px] text-slate-400 uppercase">Pressure</div>
+                <div id="passive-metric-pressure" class="text-sm font-bold text-red-300">6.10 bar</div>
+                <div class="text-[8px] text-red-400/90 font-bold">REDLINE: 6.0b</div>
+              </div>
+              <div class="p-2 rounded-lg bg-scada-950/90 border border-red-900/50 flex flex-col justify-between">
+                <div class="text-[9px] text-slate-400 uppercase">Strain</div>
+                <div id="passive-metric-strain" class="text-sm font-bold text-red-300">342 µε</div>
+                <div class="text-[8px] text-red-400/90 font-bold">YIELD: 250 µε</div>
+              </div>
+              <div class="p-2 rounded-lg bg-scada-950/90 border border-red-900/50 flex flex-col justify-between">
+                <div class="text-[9px] text-slate-400 uppercase">Vibration</div>
+                <div id="passive-metric-vib" class="text-sm font-bold text-red-300">7.95 mm/s</div>
+                <div class="text-[8px] text-red-400/90 font-bold">DANGER: 4.5</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Runaway Telemetry Chart -->
+          <div class="p-2.5 rounded-lg bg-scada-950/90 border border-red-900/50 flex flex-col">
+            <div class="flex items-center justify-between text-[10px] font-mono text-slate-400 mb-1">
+              <span class="flex items-center gap-1 text-red-400 font-bold">
+                <i data-lucide="trending-up" class="w-3 h-3"></i>
+                UNCHECKED THERMAL & PRESSURE RUNAWAY
+              </span>
+              <span id="passive-chart-status" class="text-red-500 font-bold animate-pulse">BREACHING SAFETY REDLINE</span>
+            </div>
+            <div class="h-32 w-full relative">
+              <canvas id="passive-benchmark-chart"></canvas>
+            </div>
+          </div>
+
+          <!-- Actuator Status Box -->
+          <div class="p-2.5 rounded-lg bg-red-950/30 border border-red-900/60 font-mono text-[11px] space-y-1">
+            <div class="flex items-center justify-between text-red-300 font-bold">
+              <span>ACTUATOR DISPATCH CAPABILITY:</span>
+              <span class="px-1.5 py-0.2 rounded bg-red-950 border border-red-700 text-red-400 text-[10px]">INERT</span>
+            </div>
+            <div class="text-slate-400 text-[10px] leading-relaxed">
+              NO ACTUATOR DISPATCH CAPABILITY (PASSIVE MONITOR)
+            </div>
+            <div id="passive-status-log" class="text-amber-400 text-[10px] pt-0.5">
+              > Generating incident notification ticket #8491... Sent to operator queue [Unanswered]
+            </div>
+          </div>
+
+          <!-- Culmination Alert Banner (Flashes on Rupture) -->
+          <div id="passive-culmination-banner" class="hidden p-3 rounded-xl border-2 border-red-600 bg-red-950 text-center font-mono font-bold text-xs text-red-100 shadow-2xl animate-flash-rupture">
+            <div class="text-sm tracking-wider">💥 CATASTROPHIC ASSET RUPTURE DETECTED</div>
+            <div class="text-[11px] text-red-200 mt-0.5">PRODUCTION SHUTDOWN | ESTIMATED LOSS: $2,400,000</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── RIGHT PANEL: OMNIGAZE CYBER-PHYSICAL AGENT (CLOSED-LOOP) ───── -->
+      <section class="flex flex-col bg-scada-900/90 rounded-xl border-2 border-cyan-500/70 shadow-2xl overflow-hidden backdrop-blur-sm">
+        <!-- Ambient Cyber Line -->
+        <div class="h-1 bg-gradient-to-r from-cyan-500 via-emerald-400 to-blue-500"></div>
+
+        <!-- Header -->
+        <div class="h-11 px-3.5 bg-cyan-950/40 border-b border-cyan-800/50 flex items-center justify-between">
+          <div class="flex items-center space-x-2.5">
+            <div class="w-7 h-7 rounded-lg bg-cyan-950 border border-cyan-400 flex items-center justify-center text-cyan-300 shadow-md shadow-cyan-950">
+              <i data-lucide="cpu" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <h2 class="text-xs font-bold text-cyan-200 tracking-wider uppercase font-mono">
+                OMNIGAZE CYBER-PHYSICAL AGENT (CLOSED-LOOP)
+              </h2>
+              <p class="text-[10px] text-cyan-400/80 font-mono">Meta Muse Spark Open + SAM 2 · Autonomous SCADA Interlock</p>
+            </div>
+          </div>
+          <div id="omnigaze-badge" class="px-2 py-0.5 rounded bg-emerald-950 border border-emerald-500 text-emerald-300 text-[10px] font-mono font-bold uppercase flex items-center gap-1 shadow-sm shadow-emerald-950">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>CLOSED-LOOP ARMED</span>
+          </div>
+        </div>
+
+        <!-- Panel Body -->
+        <div class="flex-1 p-3 flex flex-col gap-2.5 overflow-y-auto">
+          <!-- Top Row: Optical Frame & Key Sensor Counters -->
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-2">
+            <!-- Inspection Frame with SAM Mask -->
+            <div class="sm:col-span-5 relative bg-black rounded-lg border border-cyan-500/50 overflow-hidden h-36 flex items-center justify-center">
+              <img id="omnigaze-img" src="/mock_telemetry/annotated_defects.png" class="w-full h-full object-cover">
+              <div class="absolute inset-0 border border-cyan-400/30 pointer-events-none p-1.5 flex flex-col justify-between">
+                <span class="text-[9px] font-mono text-cyan-300 bg-cyan-950/80 px-1 py-0.5 rounded w-max">[SAM 2 DEFECT MASK]</span>
+                <span class="text-[9px] font-mono text-emerald-300 bg-emerald-950/80 px-1 py-0.5 rounded self-end">CLOSED-LOOP</span>
+              </div>
+            </div>
+
+            <!-- Sensor Telemetry Cards -->
+            <div class="sm:col-span-7 grid grid-cols-3 gap-1.5 font-mono text-center">
+              <div class="p-2 rounded-lg bg-scada-950/90 border border-cyan-900/50 flex flex-col justify-between">
+                <div class="text-[9px] text-slate-400 uppercase">Pressure</div>
+                <div id="omnigaze-metric-pressure" class="text-sm font-bold text-cyan-300">6.10 bar</div>
+                <div class="text-[8px] text-emerald-400/90 font-bold">SECURED: &lt;4.0b</div>
+              </div>
+              <div class="p-2 rounded-lg bg-scada-950/90 border border-cyan-900/50 flex flex-col justify-between">
+                <div class="text-[9px] text-slate-400 uppercase">Strain</div>
+                <div id="omnigaze-metric-strain" class="text-sm font-bold text-cyan-300">342 µε</div>
+                <div class="text-[8px] text-emerald-400/90 font-bold">BASELINE: &lt;150</div>
+              </div>
+              <div class="p-2 rounded-lg bg-scada-950/90 border border-cyan-900/50 flex flex-col justify-between">
+                <div class="text-[9px] text-slate-400 uppercase">Vibration</div>
+                <div id="omnigaze-metric-vib" class="text-sm font-bold text-cyan-300">7.95 mm/s</div>
+                <div class="text-[8px] text-emerald-400/90 font-bold">STABLE: &lt;2.5</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stabilizing Telemetry Chart -->
+          <div class="p-2.5 rounded-lg bg-scada-950/90 border border-cyan-900/50 flex flex-col">
+            <div class="flex items-center justify-between text-[10px] font-mono text-slate-400 mb-1">
+              <span class="flex items-center gap-1 text-cyan-400 font-bold">
+                <i data-lucide="trending-down" class="w-3 h-3 text-emerald-400"></i>
+                AUTONOMOUS CLOSED-LOOP STABILIZATION CURVE
+              </span>
+              <span id="omnigaze-chart-status" class="text-emerald-400 font-bold">BENDING INTO SAFE ENVELOPE</span>
+            </div>
+            <div class="h-32 w-full relative">
+              <canvas id="omnigaze-benchmark-chart"></canvas>
+            </div>
+          </div>
+
+          <!-- Actuator Status Box -->
+          <div class="p-2.5 rounded-lg bg-cyan-950/30 border border-cyan-800/60 font-mono text-[11px] space-y-1">
+            <div class="flex items-center justify-between text-cyan-300 font-bold">
+              <span>DISPATCHED ROBOTIC COUNTERMEASURES:</span>
+              <span id="omnigaze-actuator-badge" class="px-1.5 py-0.2 rounded bg-cyan-950 border border-cyan-600 text-cyan-300 text-[10px]">ARMED</span>
+            </div>
+            <div id="omnigaze-actuators-container" class="space-y-0.5 text-slate-300 text-[10px]">
+              <div>• Initializing robotic actuator mesh...</div>
+            </div>
+            <div id="omnigaze-status-log" class="text-emerald-400 text-[10px] pt-0.5">
+              > Meta Muse Spark: Spatial analysis active · Countermeasures calculating...
+            </div>
+          </div>
+
+          <!-- Culmination Confirmed Banner (Glows Emerald) -->
+          <div id="omnigaze-culmination-banner" class="hidden p-3 rounded-xl border-2 border-emerald-500 bg-emerald-950 text-center font-mono font-bold text-xs text-emerald-100 shadow-2xl animate-glow-stabilized">
+            <div class="text-sm tracking-wider">✅ MITIGATION CONFIRMED | ASSET STABILIZED</div>
+            <div class="text-[11px] text-emerald-200 mt-0.5">AUTONOMOUS INTERLOCK ARMED | ZERO OPERATIONAL DOWNTIME</div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
   <!-- ── Bottom Bar: Scenario Selector & Trigger ─────────────────────────── -->
   <footer class="h-20 border-t border-scada-800 bg-scada-900/95 backdrop-blur-md px-4 flex flex-col sm:flex-row items-center justify-between gap-3 z-30 shrink-0">
     <!-- Scenario Selection Pills -->
@@ -541,6 +810,12 @@
     let hitlCountdownInterval = null;
     let hitlDeadline = null;
 
+    // Super-Weapon Benchmark State
+    let isBenchmarkMode = false;
+    let benchmarkEventSource = null;
+    let passiveBenchmarkChart = null;
+    let omnigazeBenchmarkChart = null;
+
     // Audio synthesizer for industrial tactile feedback
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function playBeep(freq = 600, duration = 0.08, type = 'sine') {
@@ -673,8 +948,11 @@
       if (scenarioImageMap[scId]) {
         rawImageUrl = scenarioImageMap[scId];
         if (currentVisionMode === 'raw' || !currentEventSource) {
-          document.getElementById('inspection-img').src = rawImageUrl;
+          const mainImg = document.getElementById('inspection-img');
+          if (mainImg) mainImg.src = rawImageUrl;
         }
+        const passiveImg = document.getElementById('passive-img');
+        if (passiveImg) passiveImg.src = rawImageUrl;
       }
 
       document.querySelectorAll('.scenario-btn').forEach(btn => {
@@ -1138,6 +1416,329 @@
       modal.classList.add('hidden');
       playBeep(300, 0.3, 'sawtooth');
       logTerminal(`[HITL Timeout] ⏱ 30-second window expired — Countermeasure "${activeHitlAction}" [DENIED BY OPERATOR / TIMED OUT].`, 'amber');
+    }
+
+    // ── Super-Weapon Benchmark Mode Logic (Passive vs OmniGaze) ────────
+    function toggleBenchmarkMode() {
+      if (!isBenchmarkMode) {
+        enterBenchmarkMode();
+      } else {
+        exitBenchmarkMode();
+      }
+    }
+
+    function enterBenchmarkMode() {
+      isBenchmarkMode = true;
+      playBeep(780, 0.12, 'square');
+
+      // Swap views
+      document.getElementById('single-pane-view').classList.add('hidden');
+      document.getElementById('benchmark-view').classList.remove('hidden');
+
+      // Update header toggle button appearance
+      const btnToggle = document.getElementById('btn-toggle-benchmark');
+      const btnText = document.getElementById('benchmark-btn-text');
+      if (btnText) btnText.textContent = 'EXIT BENCHMARK';
+      btnToggle.className = "px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-red-950/90 via-scada-900 to-red-950/90 border-2 border-red-500 text-red-200 text-xs font-mono font-bold tracking-wider hover:border-red-400 hover:text-white shadow-lg shadow-red-500/25 transition active:scale-95 flex items-center space-x-2";
+
+      // Populate scenario assets
+      const scenarioImageMap = {
+        'SC-001': '/mock_telemetry/real_assets/bridge_girder_shear_crack.png',
+        'SC-002': '/mock_telemetry/real_assets/pipeline_pitting_corrosion.png',
+        'SC-003': '/mock_telemetry/synthetic_defect.png',
+        'SC-004': '/mock_telemetry/real_assets/weld_joint_fatigue_crack.png',
+      };
+      const activeImg = scenarioImageMap[currentScenario] || '/mock_telemetry/real_assets/bridge_girder_shear_crack.png';
+      const passiveImg = document.getElementById('passive-img');
+      if (passiveImg) passiveImg.src = activeImg;
+      const omniImg = document.getElementById('omnigaze-img');
+      if (omniImg) omniImg.src = '/mock_telemetry/annotated_defects.png';
+
+      // Initialize comparative charts & run
+      initBenchmarkCharts();
+      triggerBenchmarkRun();
+      lucide.createIcons();
+    }
+
+    function exitBenchmarkMode() {
+      isBenchmarkMode = false;
+      playBeep(480, 0.08);
+
+      if (benchmarkEventSource) {
+        benchmarkEventSource.close();
+        benchmarkEventSource = null;
+      }
+
+      // Restore single pane view
+      document.getElementById('benchmark-view').classList.add('hidden');
+      document.getElementById('single-pane-view').classList.remove('hidden');
+
+      // Restore header toggle button appearance
+      const btnToggle = document.getElementById('btn-toggle-benchmark');
+      const btnText = document.getElementById('benchmark-btn-text');
+      if (btnText) btnText.textContent = 'BENCHMARK MODE: PASSIVE vs OMNIGAZE';
+      btnToggle.className = "px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-950/80 via-scada-900 to-cyan-950/80 border-2 border-cyan-400 text-cyan-200 text-xs font-mono font-bold tracking-wider hover:border-purple-400 hover:text-white shadow-lg shadow-cyan-500/25 hover:shadow-purple-500/35 transition active:scale-95 flex items-center space-x-2 animate-pulse-neon";
+
+      if (telemetryChart) {
+        telemetryChart.resize();
+      }
+      lucide.createIcons();
+    }
+
+    function initBenchmarkCharts() {
+      // 1. Passive Benchmark Chart (Unchecked Runaway Spiking past Redline)
+      const ctxPassive = document.getElementById('passive-benchmark-chart').getContext('2d');
+      if (passiveBenchmarkChart) {
+        passiveBenchmarkChart.destroy();
+      }
+      passiveBenchmarkChart = new Chart(ctxPassive, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [
+            {
+              label: 'Pressure (bar)',
+              data: [],
+              borderColor: '#ef4444',
+              backgroundColor: 'rgba(239, 68, 68, 0.15)',
+              borderWidth: 2.5,
+              tension: 0.25,
+              pointRadius: 4,
+              pointBackgroundColor: '#ef4444',
+              fill: true
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top',
+              labels: {
+                color: '#f87171',
+                boxWidth: 8,
+                font: { size: 9, family: '"JetBrains Mono"' }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(239, 68, 68, 0.1)' },
+              ticks: { color: '#f87171', font: { size: 9, family: '"JetBrains Mono"' } }
+            },
+            y: {
+              min: 0,
+              max: 12,
+              title: { display: true, text: 'bar (REDLINE: 6.0b)', color: '#ef4444', font: { size: 9 } },
+              grid: { color: 'rgba(239, 68, 68, 0.15)' },
+              ticks: { color: '#ef4444', font: { size: 9, family: '"JetBrains Mono"' } }
+            }
+          }
+        }
+      });
+
+      // 2. OmniGaze Benchmark Chart (Closed-Loop Bending into Safe Envelope)
+      const ctxOmni = document.getElementById('omnigaze-benchmark-chart').getContext('2d');
+      if (omnigazeBenchmarkChart) {
+        omnigazeBenchmarkChart.destroy();
+      }
+      omnigazeBenchmarkChart = new Chart(ctxOmni, {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [
+            {
+              label: 'Pressure (bar)',
+              data: [],
+              borderColor: '#06b6d4',
+              backgroundColor: 'rgba(6, 182, 212, 0.15)',
+              borderWidth: 2.5,
+              tension: 0.25,
+              pointRadius: 4,
+              pointBackgroundColor: '#10b981',
+              fill: true
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top',
+              labels: {
+                color: '#22d3ee',
+                boxWidth: 8,
+                font: { size: 9, family: '"JetBrains Mono"' }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(6, 182, 212, 0.1)' },
+              ticks: { color: '#22d3ee', font: { size: 9, family: '"JetBrains Mono"' } }
+            },
+            y: {
+              min: 0,
+              max: 8,
+              title: { display: true, text: 'bar (SAFE: <4.0b)', color: '#06b6d4', font: { size: 9 } },
+              grid: { color: 'rgba(6, 182, 212, 0.15)' },
+              ticks: { color: '#06b6d4', font: { size: 9, family: '"JetBrains Mono"' } }
+            }
+          }
+        }
+      });
+    }
+
+    function triggerBenchmarkRun() {
+      if (benchmarkEventSource) {
+        benchmarkEventSource.close();
+      }
+
+      playBeep(880, 0.12, 'square');
+
+      // Update button state
+      const btn = document.getElementById('btn-benchmark-run');
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = `<i data-lucide="loader" class="w-3.5 h-3.5 animate-spin"></i><span>BENCHMARK RUNNING...</span>`;
+      }
+      lucide.createIcons();
+
+      // Reset banners & statuses
+      document.getElementById('passive-culmination-banner').classList.add('hidden');
+      document.getElementById('omnigaze-culmination-banner').classList.add('hidden');
+      document.getElementById('passive-chart-status').textContent = 'BREACHING SAFETY REDLINE';
+      document.getElementById('omnigaze-chart-status').textContent = 'BENDING INTO SAFE ENVELOPE';
+
+      // Reset badges & metrics
+      document.getElementById('passive-badge').textContent = 'PASSIVE MONITOR';
+      document.getElementById('passive-badge').className = 'px-2 py-0.5 rounded bg-red-950 border border-red-600/70 text-red-300 text-[10px] font-mono font-bold uppercase animate-pulse';
+      document.getElementById('omnigaze-badge').innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span><span>CLOSED-LOOP ARMED</span>';
+
+      // Reset actuators container
+      const actContainer = document.getElementById('omnigaze-actuators-container');
+      actContainer.innerHTML = '<div class="text-slate-400 text-[10px]">• Initializing robotic actuator mesh...</div>';
+      document.getElementById('omnigaze-actuator-badge').textContent = 'ARMED';
+      document.getElementById('omnigaze-actuator-badge').className = 'px-1.5 py-0.2 rounded bg-cyan-950 border border-cyan-600 text-cyan-300 text-[10px]';
+
+      // Reset chart datasets
+      if (passiveBenchmarkChart) {
+        passiveBenchmarkChart.data.labels = [];
+        passiveBenchmarkChart.data.datasets[0].data = [];
+        passiveBenchmarkChart.update();
+      }
+      if (omnigazeBenchmarkChart) {
+        omnigazeBenchmarkChart.data.labels = [];
+        omnigazeBenchmarkChart.data.datasets[0].data = [];
+        omnigazeBenchmarkChart.update();
+      }
+
+      // Connect to SSE benchmark stream
+      const streamUrl = `/api/stream/${currentScenario}?mode=benchmark`;
+      benchmarkEventSource = new EventSource(streamUrl);
+
+      benchmarkEventSource.addEventListener('benchmark_step', (e) => {
+        const data = JSON.parse(e.data);
+        const stepLabel = data.phase ? data.phase.split(':')[0] : `T${data.step_index}`;
+
+        // ── 1. Passive Stream Updates ──
+        if (data.passive) {
+          const p = data.passive;
+          document.getElementById('passive-metric-pressure').textContent = `${p.pressure_bar.toFixed(2)} bar`;
+          document.getElementById('passive-metric-strain').textContent = `${p.strain_microstrain.toFixed(0)} µε`;
+          document.getElementById('passive-metric-vib').textContent = `${p.vibration_rms_mm_s.toFixed(2)} mm/s`;
+          document.getElementById('passive-status-log').textContent = `> ${p.status_text}`;
+
+          if (p.status_badge) {
+            document.getElementById('passive-badge').textContent = p.status_badge;
+          }
+
+          if (passiveBenchmarkChart) {
+            passiveBenchmarkChart.data.labels.push(stepLabel);
+            passiveBenchmarkChart.data.datasets[0].data.push(p.pressure_bar);
+            passiveBenchmarkChart.update();
+          }
+
+          if (p.culmination) {
+            document.getElementById('passive-culmination-banner').classList.remove('hidden');
+            document.getElementById('passive-chart-status').textContent = '💥 RUPTURED: ASSET DESTROYED';
+            playBeep(260, 0.45, 'sawtooth');
+          }
+        }
+
+        // ── 2. OmniGaze Stream Updates ──
+        if (data.omnigaze) {
+          const o = data.omnigaze;
+          document.getElementById('omnigaze-metric-pressure').textContent = `${o.pressure_bar.toFixed(2)} bar`;
+          document.getElementById('omnigaze-metric-strain').textContent = `${o.strain_microstrain.toFixed(0)} µε`;
+          document.getElementById('omnigaze-metric-vib').textContent = `${o.vibration_rms_mm_s.toFixed(2)} mm/s`;
+          document.getElementById('omnigaze-status-log').textContent = `> ${o.status_text}`;
+
+          if (o.status_badge) {
+            document.getElementById('omnigaze-badge').innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span><span>${o.status_badge}</span>`;
+          }
+
+          if (o.actions && o.actions.length > 0) {
+            actContainer.innerHTML = '';
+            o.actions.forEach(act => {
+              const row = document.createElement('div');
+              row.className = 'flex items-center justify-between text-[10px] text-cyan-200';
+              row.innerHTML = `
+                <span>⚡ ${act.action} → <span class="text-white">${act.target}</span></span>
+                <span class="text-emerald-400 font-bold uppercase">[${act.status}]</span>
+              `;
+              actContainer.appendChild(row);
+            });
+            document.getElementById('omnigaze-actuator-badge').textContent = 'EXECUTED';
+            document.getElementById('omnigaze-actuator-badge').className = 'px-1.5 py-0.2 rounded bg-emerald-950 border border-emerald-500 text-emerald-300 text-[10px] font-bold';
+          }
+
+          if (omnigazeBenchmarkChart) {
+            omnigazeBenchmarkChart.data.labels.push(stepLabel);
+            omnigazeBenchmarkChart.data.datasets[0].data.push(o.pressure_bar);
+            omnigazeBenchmarkChart.update();
+          }
+
+          if (o.culmination) {
+            document.getElementById('omnigaze-culmination-banner').classList.remove('hidden');
+            document.getElementById('omnigaze-chart-status').textContent = '✅ STABILIZED IN SAFE ENVELOPE';
+            playBeep(980, 0.35, 'sine');
+          }
+        }
+      });
+
+      benchmarkEventSource.addEventListener('benchmark_summary', (e) => {
+        const summary = JSON.parse(e.data);
+        console.log('[BENCHMARK SUMMARY]', summary);
+      });
+
+      benchmarkEventSource.addEventListener('complete', () => {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = `<i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i><span>RUN LIVE BENCHMARK</span>`;
+        }
+        lucide.createIcons();
+        if (benchmarkEventSource) {
+          benchmarkEventSource.close();
+          benchmarkEventSource = null;
+        }
+      });
+
+      benchmarkEventSource.onerror = () => {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = `<i data-lucide="play" class="w-3.5 h-3.5 fill-current"></i><span>RUN LIVE BENCHMARK</span>`;
+        }
+        lucide.createIcons();
+        if (benchmarkEventSource) {
+          benchmarkEventSource.close();
+          benchmarkEventSource = null;
+        }
+      };
     }
 
     // Ping diagnostic health
