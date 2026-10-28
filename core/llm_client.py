@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import textwrap
 import time
 from dataclasses import dataclass, field
@@ -114,7 +115,7 @@ class MetaLLMClient:
         model: str | None = None,
         api_key: str | None = None,
         temperature: float = 0.3,
-        max_tokens: int = 2000,
+        max_tokens: int = 4096,
     ) -> None:
         self.base_url = (base_url or _DEFAULT_BASE_URL).rstrip("/")
         self.model = model or _DEFAULT_MODEL
@@ -149,6 +150,8 @@ class MetaLLMClient:
             3. Recommend concrete mitigation actions.
             4. Estimate remaining useful life in hours if possible.
 
+            Keep internal reasoning concise. You must strictly output the final assessment as a valid, closed JSON object enclosed in ```json ... ```.
+
             Respond ONLY with valid JSON matching this schema:
             {
               "severity": "<critical|high|moderate|low>",
@@ -168,7 +171,7 @@ class MetaLLMClient:
         )
 
         if self._online:
-            return self._call_api(
+            return self._call_baseten(
                 system=system_prompt,
                 user=user_prompt,
                 defect_report=defect_report,
@@ -180,9 +183,54 @@ class MetaLLMClient:
         mock_res.llm_provider = "mock"
         return mock_res
 
+    # ── response parser ───────────────────────────────────────────────────
+
+    @staticmethod
+    def _parse_response(content: str) -> dict[str, Any]:
+        """Robustly extract and parse JSON assessment from LLM output."""
+        content = (content or "").strip()
+        if not content:
+            raise ValueError("Empty response content from LLM")
+
+        # 1. Regex to extract code block enclosed in ```json ... ``` or ``` ... ```
+        code_blocks = re.findall(r'```(?:json)?\s*(\{.*?\})\s*```', content, re.DOTALL)
+        for block in reversed(code_blocks):
+            try:
+                data = json.loads(block.strip())
+                if isinstance(data, dict):
+                    return data
+            except Exception:
+                pass
+
+        # 2. Extract between the outermost matching '{' and '}'
+        first_brace = content.find('{')
+        last_brace = content.rfind('}')
+        if first_brace != -1 and last_brace != -1 and last_brace > first_brace:
+            candidate = content[first_brace:last_brace + 1].strip()
+            try:
+                data = json.loads(candidate)
+                if isinstance(data, dict):
+                    return data
+            except Exception:
+                pass
+
+            # If trailing reasoning exists or extra text is present, extract valid JSON substrings
+            matches = re.findall(r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}', candidate, re.DOTALL)
+            for m in reversed(matches):
+                try:
+                    data = json.loads(m.strip())
+                    if isinstance(data, dict) and "severity" in data:
+                        return data
+                except Exception:
+                    pass
+
+        # 3. Direct strip of markdown fences and parse
+        cleaned = content.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        return json.loads(cleaned)
+
     # ── private: live API call ────────────────────────────────────────────
 
-    def _call_api(
+    def _call_baseten(
         self,
         system: str,
         user: str,
@@ -244,9 +292,7 @@ class MetaLLMClient:
                         continue
                     raise ValueError("Empty or None content returned from LLM endpoint after retry")
 
-                # Strip markdown code fences if present
-                content = content.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
-                data = json.loads(content)
+                data = self._parse_response(content)
                 data["llm_provider"] = "baseten"
                 return ThreatAssessment(**data)
 
@@ -273,6 +319,9 @@ class MetaLLMClient:
                 mock_res = self._mock_assess(defect_report, sensor_readings)
                 mock_res.llm_provider = "mock"
                 return mock_res
+
+    # Alias for backwards compatibility
+    _call_api = _call_baseten
 
     # ── private: deterministic offline mock ───────────────────────────────
 
