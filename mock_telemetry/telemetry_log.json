@@ -1,7 +1,7 @@
 {
   "inspection_id": "SC-004",
   "scenario": "SC-004",
-  "timestamp": "2026-10-28T16:40:23.158109+00:00",
+  "timestamp": "2026-10-28T18:26:14.760765+00:00",
   "asset": {
     "id": "STRUCTURE-INFRA-SC-004 (simulated)",
     "type": "reinforced_concrete_beam",

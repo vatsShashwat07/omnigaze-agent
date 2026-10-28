@@ -93,6 +93,20 @@
     .animate-pulse-fast {
       animation: pulse-fast 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     }
+
+    @keyframes pulse-border {
+      0%, 100% {
+        border-color: rgba(239, 68, 68, 0.95);
+        box-shadow: 0 0 30px rgba(239, 68, 68, 0.45), inset 0 0 15px rgba(239, 68, 68, 0.2);
+      }
+      50% {
+        border-color: rgba(245, 158, 11, 0.95);
+        box-shadow: 0 0 30px rgba(245, 158, 11, 0.45), inset 0 0 15px rgba(245, 158, 11, 0.2);
+      }
+    }
+    .animate-pulse-border {
+      animation: pulse-border 1.5s ease-in-out infinite;
+    }
   </style>
 </head>
 <body class="min-h-screen flex flex-col bg-scada-950 bg-grid select-none">
@@ -431,64 +445,79 @@
     </div>
   </footer>
 
-  <!-- ── Human-in-the-Loop (HITL) Authorization Modal ───────────────────── -->
-  <div id="hitl-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="bg-scada-900 border-2 border-red-500 rounded-2xl max-w-lg w-full shadow-2xl shadow-red-950 overflow-hidden transform transition-all animate-bounce-once">
+  <!-- ── Human-in-the-Loop (HITL) Safety Approval Gate Modal ───────────── -->
+  <div id="hitl-modal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 transition-all duration-300">
+    <div class="bg-scada-900 border-2 rounded-2xl max-w-lg w-full shadow-2xl p-6 relative overflow-hidden animate-pulse-border">
       
-      <!-- Modal Header -->
-      <div class="p-4 bg-gradient-to-r from-red-950 to-scada-900 border-b border-red-800/80 flex items-center justify-between">
-        <div class="flex items-center space-x-2.5">
-          <div class="w-9 h-9 rounded-lg bg-red-600/30 border border-red-500 flex items-center justify-center text-red-400">
-            <i data-lucide="shield-alert" class="w-5 h-5"></i>
+      <!-- Ambient accent line -->
+      <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-red-500 to-amber-500"></div>
+
+      <!-- Header -->
+      <div class="flex items-start justify-between pb-4 border-b border-scada-800">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-red-950/80 border border-red-500/80 flex items-center justify-center text-red-400 shadow-lg shadow-red-950">
+            <i data-lucide="alert-triangle" class="w-5 h-5 animate-bounce"></i>
           </div>
           <div>
-            <h2 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-              Human-in-the-Loop Override
-              <span class="text-[10px] px-1.5 py-0.5 rounded bg-red-600 text-white font-mono">SEV-CRITICAL</span>
+            <h2 class="text-base font-bold text-white tracking-wider flex items-center gap-2">
+              ⚠️ OPERATOR AUTHORIZATION REQUIRED
             </h2>
-            <p class="text-[11px] text-red-300">High-severity robotic mitigation requires command authorization.</p>
+            <p class="text-[11px] text-amber-400/90 font-mono tracking-wide uppercase">Safety Interlock Gate · Autonomous Action Paused</p>
           </div>
         </div>
       </div>
 
-      <!-- Modal Body -->
-      <div class="p-4 space-y-3 font-mono text-xs">
-        <div class="p-3 rounded-lg bg-black/60 border border-red-900/50 space-y-1.5">
-          <div class="text-slate-400">TARGET ASSET: <span class="text-white font-bold" id="hitl-asset">--</span></div>
-          <div class="text-slate-400">IDENTIFIED THREAT: <span class="text-red-400 font-bold" id="hitl-threat">CRITICAL THREAT</span></div>
+      <!-- Modal Body / Metric Display -->
+      <div class="py-4 space-y-3 font-mono text-xs">
+        <div class="grid grid-cols-2 gap-2.5">
+          <div class="p-2.5 rounded-lg bg-scada-850/90 border border-scada-700/80">
+            <div class="text-[10px] text-slate-400 uppercase">Target Asset</div>
+            <div id="hitl-target-asset" class="text-sm font-bold text-white truncate mt-0.5">--</div>
+          </div>
+          <div class="p-2.5 rounded-lg bg-scada-850/90 border border-scada-700/80">
+            <div class="text-[10px] text-slate-400 uppercase">Risk Level</div>
+            <div id="hitl-risk-level" class="text-sm font-bold text-red-400 flex items-center gap-1.5 mt-0.5">
+              <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+              <span>CRITICAL</span>
+            </div>
+          </div>
         </div>
 
-        <div>
-          <div class="text-slate-300 font-bold mb-1.5">Pending Actuator Directives:</div>
-          <ul id="hitl-actions-list" class="space-y-1 text-slate-300">
-            <li class="flex items-center space-x-2 p-1.5 rounded bg-scada-850 border border-scada-800">
-              <span class="text-cyan-400">►</span>
-              <span>pressure_valve_adjustment: PV-12</span>
-            </li>
-            <li class="flex items-center space-x-2 p-1.5 rounded bg-scada-850 border border-scada-800">
-              <span class="text-cyan-400">►</span>
-              <span>emergency_lockdown: Structural load bypass</span>
-            </li>
-            <li class="flex items-center space-x-2 p-1.5 rounded bg-scada-850 border border-scada-800">
-              <span class="text-cyan-400">►</span>
-              <span>drone_repositioning: Altitude descend for photogrammetry</span>
-            </li>
-          </ul>
+        <div class="p-3 rounded-lg bg-scada-950/90 border border-red-900/60">
+          <div class="text-[10px] text-slate-400 uppercase mb-1">Proposed Critical Mitigation</div>
+          <div class="flex items-center justify-between">
+            <span id="hitl-action-name" class="text-sm font-bold text-cyan-300">emergency_lockdown</span>
+            <span class="px-2 py-0.5 rounded bg-red-950 text-red-300 border border-red-700/60 text-[10px] font-bold uppercase">PHYSICAL ACTUATOR</span>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-2 font-sans">
+            High-consequence interlock countermeasure requires human sign-off before robotic execution.
+          </p>
         </div>
 
-        <div class="text-[11px] text-slate-400 italic">
-          Safety Protocol: Authorizing will immediately trip hydraulic valves and signal local robotic controllers.
+        <!-- 30-Second Countdown Progress Bar -->
+        <div class="p-3 rounded-lg bg-scada-850/60 border border-scada-800 space-y-1.5">
+          <div class="flex items-center justify-between text-[11px]">
+            <span class="text-slate-400 flex items-center gap-1">
+              <i data-lucide="timer" class="w-3.5 h-3.5 text-amber-400"></i>
+              Auto-Abort Countdown
+            </span>
+            <span id="hitl-timer-label" class="font-bold text-amber-400">30.0s</span>
+          </div>
+          <div class="w-full bg-scada-950 rounded-full h-2 overflow-hidden border border-scada-800">
+            <div id="hitl-progress-bar" class="bg-gradient-to-r from-amber-500 to-red-500 h-2 rounded-full transition-all duration-100" style="width: 100%;"></div>
+          </div>
         </div>
       </div>
 
-      <!-- Modal Actions -->
-      <div class="p-4 bg-scada-850 border-t border-scada-800 flex items-center justify-end space-x-3">
-        <button onclick="closeHitlModal(false)" class="px-4 py-2 rounded-lg bg-scada-700 hover:bg-scada-600 text-slate-200 text-xs font-mono transition">
-          Simulation Only
+      <!-- Modal Action Buttons -->
+      <div class="pt-3 border-t border-scada-800 grid grid-cols-2 gap-3 font-mono">
+        <button id="btn-hitl-abort" onclick="handleHitlDecision(false)" class="py-2.5 px-4 rounded-xl bg-red-950/90 hover:bg-red-900 border border-red-600 text-red-300 hover:text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-red-950 flex items-center justify-center space-x-2 transition active:scale-95">
+          <i data-lucide="x-circle" class="w-4 h-4"></i>
+          <span>ABORT ACTION</span>
         </button>
-        <button onclick="confirmHitlAuthorization()" class="px-5 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-red-600/40 ring-1 ring-red-400 flex items-center space-x-2 transition">
-          <i data-lucide="check-check" class="w-4 h-4"></i>
-          <span>Authorize Mitigation</span>
+        <button id="btn-hitl-approve" onclick="handleHitlDecision(true)" class="py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider shadow-lg shadow-emerald-950 ring-1 ring-emerald-400 flex items-center justify-center space-x-2 transition active:scale-95">
+          <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+          <span>APPROVE MITIGATION</span>
         </button>
       </div>
 
@@ -505,6 +534,12 @@
     let rawImageUrl = '/mock_telemetry/synthetic_defect.png';
     let maskImageUrl = '/mock_telemetry/annotated_defects.png';
     let currentVisionMode = 'sam';
+
+    // HITL Safety Interlock state
+    let activeHitlRunId = null;
+    let activeHitlAction = null;
+    let hitlCountdownInterval = null;
+    let hitlDeadline = null;
 
     // Audio synthesizer for industrial tactile feedback
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -710,6 +745,8 @@
       document.getElementById('terminal-log').innerHTML = '';
       document.getElementById('actions-container').innerHTML = '';
       document.getElementById('defect-tag').classList.add('hidden');
+      if (hitlCountdownInterval) clearInterval(hitlCountdownInterval);
+      document.getElementById('hitl-modal').classList.add('hidden');
       
       // Reset chart to empty before run
       if (telemetryChart) {
@@ -857,12 +894,22 @@
         if (data.recommended_actions && data.recommended_actions.length) {
           logTerminal(`[Directives] ${data.recommended_actions.slice(0, 2).join(' | ')}`);
         }
+      });
 
-        // Trigger HITL Modal if Critical
-        if (data.requires_hitl) {
-          playBeep(900, 0.25, 'sawtooth');
-          showHitlModal(data);
-        }
+      // ── Human-in-the-Loop Safety Interlock Approval Gate ───────────────
+      currentEventSource.addEventListener('approval_required', (e) => {
+        const data = JSON.parse(e.data);
+        activeHitlRunId = data.run_id;
+        activeHitlAction = data.action;
+
+        document.getElementById('stream-status').textContent = '⚠️ OPERATOR AUTHORIZATION REQUIRED';
+        playBeep(880, 0.25, 'sawtooth');
+        setTimeout(() => playBeep(1100, 0.25, 'sawtooth'), 150);
+
+        logTerminal(`[HITL Gate] ⚠️ Operator authorization required for critical mitigation: <span class="text-amber-400 font-bold">${data.action}</span> on <span class="text-white">${data.target}</span>.`, 'amber');
+        logTerminal(`[HITL Gate] Worker thread paused (30s interlock timeout). Awaiting operator action in SCADA modal HUD...`, 'cyan');
+
+        showApprovalModal(data);
       });
 
       currentEventSource.addEventListener('action', (e) => {
@@ -878,15 +925,31 @@
         container.innerHTML = '';
         data.actions.forEach(a => {
           const row = document.createElement('div');
-          row.className = 'flex items-center justify-between p-1 rounded bg-scada-900 border border-scada-800 text-[10px]';
+          row.className = 'flex items-center justify-between p-1.5 rounded bg-scada-900 border border-scada-800 text-[10px] font-mono';
+          
+          let statusBadgeClass = 'text-cyan-400 font-semibold';
+          if ((a.status || '').includes('AUTHORIZED')) {
+            statusBadgeClass = 'text-emerald-400 font-bold';
+          } else if ((a.status || '').includes('DENIED') || (a.status || '').includes('TIMED OUT')) {
+            statusBadgeClass = 'text-red-400 font-bold';
+          } else if ((a.status || '') === 'executed') {
+            statusBadgeClass = 'text-emerald-400';
+          }
+
           row.innerHTML = `
             <span class="text-slate-300"><span class="text-cyan-400 font-bold">🤖 ${a.action}</span> → ${a.target}</span>
-            <span class="text-emerald-400 font-bold uppercase">[${a.status}]</span>
+            <span class="${statusBadgeClass} uppercase">${a.status}</span>
           `;
           container.appendChild(row);
+
+          if ((a.status || '').includes('AUTHORIZED')) {
+            logTerminal(`[DispatchAction] Countermeasure <span class="text-emerald-400 font-bold">${a.action}</span>: [AUTHORIZED & EXECUTED]`, 'emerald');
+          } else if ((a.status || '').includes('DENIED') || (a.status || '').includes('TIMED OUT')) {
+            logTerminal(`[DispatchAction] Countermeasure <span class="text-red-400 font-bold">${a.action}</span>: [DENIED BY OPERATOR / TIMED OUT]`, 'amber');
+          }
         });
 
-        logTerminal(`[DispatchAction] Iteration ${data.iteration}: Dispatched ${data.actions.length} countermeasures [${data.authorization_status}]`, 'emerald');
+        logTerminal(`[DispatchAction] Iteration ${data.iteration}: Processed ${data.actions.length} countermeasures [${data.authorization_status}]`, 'emerald');
       });
 
       currentEventSource.addEventListener('verify', (e) => {
@@ -992,32 +1055,76 @@
       }
     }
 
-    // HITL Modal Handling
-    function showHitlModal(data) {
-      document.getElementById('hitl-threat').textContent = `${data.severity} STRUCTURAL DEFECT`;
-      document.getElementById('hitl-modal').classList.remove('hidden');
+    // ── HITL Safety Interlock Modal Logic ──────────────────────────────
+    function showApprovalModal(data) {
+      document.getElementById('hitl-target-asset').textContent = data.target || '--';
+      document.getElementById('hitl-action-name').textContent = data.action || 'emergency_lockdown';
+      document.getElementById('hitl-risk-level').innerHTML = `
+        <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+        <span>${data.severity || 'CRITICAL'}</span>
+      `;
+
+      const modal = document.getElementById('hitl-modal');
+      modal.classList.remove('hidden');
+      lucide.createIcons();
+
+      const totalSec = data.timeout_sec || 30;
+      hitlDeadline = Date.now() + (totalSec * 1000);
+      const progressBar = document.getElementById('hitl-progress-bar');
+      const timerLabel = document.getElementById('hitl-timer-label');
+
+      if (hitlCountdownInterval) clearInterval(hitlCountdownInterval);
+
+      hitlCountdownInterval = setInterval(() => {
+        const remainingMs = hitlDeadline - Date.now();
+        const remainingSec = Math.max(0, remainingMs / 1000);
+
+        timerLabel.textContent = `${remainingSec.toFixed(1)}s`;
+        const pct = Math.max(0, Math.min(100, (remainingSec / totalSec) * 100));
+        progressBar.style.width = `${pct}%`;
+
+        if (remainingMs <= 0) {
+          clearInterval(hitlCountdownInterval);
+          handleHitlTimeout();
+        }
+      }, 50);
     }
 
-    function closeHitlModal() {
-      document.getElementById('hitl-modal').classList.add('hidden');
-    }
+    async function handleHitlDecision(approved) {
+      if (hitlCountdownInterval) clearInterval(hitlCountdownInterval);
+      const modal = document.getElementById('hitl-modal');
+      modal.classList.add('hidden');
 
-    async function confirmHitlAuthorization() {
-      playBeep(1050, 0.18);
-      closeHitlModal();
-      logTerminal(`[HITL] Commander authorization granted for high-severity mitigation.`, 'emerald');
+      const runId = activeHitlRunId;
+      const action = activeHitlAction;
+
+      if (approved) {
+        playBeep(920, 0.15, 'sine');
+        logTerminal(`[HITL Decision] ✅ Operator Approved: Countermeasure "${action}" [AUTHORIZED & EXECUTED].`, 'emerald');
+      } else {
+        playBeep(350, 0.2, 'sawtooth');
+        logTerminal(`[HITL Decision] ⛔ Operator Aborted: Countermeasure "${action}" [DENIED BY OPERATOR / TIMED OUT].`, 'red');
+      }
 
       try {
         await fetch('/api/approve-action', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            scenario: currentScenario,
-            authorized_by: 'Mission Commander',
-            notes: 'Authorized via mission control HUD.'
+            run_id: runId,
+            approve: approved
           })
         });
-      } catch (e) {}
+      } catch (err) {
+        console.error('Failed to submit approval decision:', err);
+      }
+    }
+
+    function handleHitlTimeout() {
+      const modal = document.getElementById('hitl-modal');
+      modal.classList.add('hidden');
+      playBeep(300, 0.3, 'sawtooth');
+      logTerminal(`[HITL Timeout] ⏱ 30-second window expired — Countermeasure "${activeHitlAction}" [DENIED BY OPERATOR / TIMED OUT].`, 'amber');
     }
 
     // Ping diagnostic health

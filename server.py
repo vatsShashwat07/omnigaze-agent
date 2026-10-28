@@ -20,6 +20,7 @@ import json
 import os
 import sys
 import time
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, AsyncGenerator, Dict
@@ -82,11 +83,15 @@ app.mount("/mock_telemetry", StaticFiles(directory=str(MOCK_TELEMETRY_DIR)), nam
 
 # ── State / Authorization Cache ───────────────────────────────────────────────
 
+CRITICAL_ACTIONS = ["emergency_containment_lock", "emergency_lockdown", "load_shedding"]
+PENDING_APPROVALS: Dict[str, Dict[str, Any]] = {}
 HITL_APPROVALS: Dict[str, Dict[str, Any]] = {}
 
 
 class ApprovalRequest(BaseModel):
-    scenario: str = "SC-001"
+    run_id: str | None = None
+    approve: bool = True
+    scenario: str | None = None
     action_ids: list[str] = Field(default_factory=list)
     authorized_by: str = "Mission Commander"
     notes: str = "Authorized via Mission Control Industrial SCADA interface."
@@ -140,26 +145,47 @@ async def get_status() -> dict[str, Any]:
             {"id": "SC-004", "name": "Stubborn Crack", "severity": "MULTI-RETRY"},
         ],
         "active_approvals": HITL_APPROVALS,
+        "pending_approvals_count": len(PENDING_APPROVALS),
     }
 
 
 @app.post("/api/approve-action")
 async def approve_action(req: ApprovalRequest) -> dict[str, Any]:
     """Human-in-the-Loop approval for critical countermeasures."""
+    run_id = req.run_id or req.scenario or "default"
+    print(f"[API] /api/approve-action received for run_id={run_id}, approve={req.approve}")
+
+    if run_id in PENDING_APPROVALS:
+        pending = PENDING_APPROVALS[run_id]
+        pending["approved"] = bool(req.approve)
+        pending["responded"] = True
+        pending["event"].set()
+        return {
+            "status": "ok",
+            "run_id": run_id,
+            "approved": pending["approved"],
+            "action": pending.get("action"),
+            "message": f"Action {'[AUTHORIZED & EXECUTED]' if pending['approved'] else '[DENIED BY OPERATOR / TIMED OUT]'}.",
+        }
+
+    # Historical record fallback
     approval_record = {
-        "scenario": req.scenario,
+        "scenario": req.scenario or run_id,
+        "run_id": run_id,
         "action_ids": req.action_ids,
         "authorized_by": req.authorized_by,
         "timestamp": datetime.now(timezone.utc).isoformat(),
-        "status": "AUTHORIZED",
+        "status": "AUTHORIZED" if req.approve else "DENIED",
         "notes": req.notes,
     }
-    HITL_APPROVALS[req.scenario] = approval_record
-    HITL_APPROVALS["ALL"] = approval_record
+    HITL_APPROVALS[run_id] = approval_record
+    if req.scenario:
+        HITL_APPROVALS[req.scenario] = approval_record
 
     return {
-        "success": True,
-        "message": f"Action authorization confirmed by {req.authorized_by}",
+        "status": "recorded",
+        "run_id": run_id,
+        "approved": req.approve,
         "approval": approval_record,
     }
 
@@ -180,7 +206,9 @@ async def stream_pipeline(
         if not normalized_scenario.startswith("SC-"):
             normalized_scenario = f"SC-{normalized_scenario}"
 
-        print(f"\n[SSE] Client connected. Launching pipeline for {normalized_scenario} (provider={provider})")
+        run_id = f"RUN-{normalized_scenario}-{uuid.uuid4().hex[:8]}"
+
+        print(f"\n[SSE] Client connected. Launching pipeline for {normalized_scenario} (run_id={run_id}, provider={provider})")
 
         # ── Step 1: Ingest Telemetry ──────────────────────────────────────────
         await asyncio.sleep(0.3)
@@ -206,6 +234,7 @@ async def stream_pipeline(
             "event": "ingest",
             "data": json.dumps({
                 "node": "ingest_telemetry",
+                "run_id": run_id,
                 "scenario": normalized_scenario,
                 "inspection_id": telemetry.get("inspection_id", normalized_scenario),
                 "asset": asset,
@@ -307,7 +336,7 @@ async def stream_pipeline(
 
             # Determine action catalogue
             sev_key = ass_dict.get("severity", "moderate").lower()
-            if sev_key == "critical":
+            if sev_key == "critical" or normalized_scenario == "SC-001":
                 actions = [
                     {
                         "action": "pressure_valve_adjustment",
@@ -321,7 +350,7 @@ async def stream_pipeline(
                         "target": asset.get("component_id") or "sector-flange (simulated)",
                         "parameter": "access_restriction",
                         "value": "full_lockdown",
-                        "status": "executed",
+                        "status": "pending_authorization",
                     },
                     {
                         "action": "drone_repositioning",
@@ -376,6 +405,61 @@ async def stream_pipeline(
                     },
                 ]
 
+            # Check if any proposed action is in the critical list:
+            # ["emergency_containment_lock", "emergency_lockdown", "load_shedding"]
+            critical_action = next(
+                (a for a in actions if a.get("action") in CRITICAL_ACTIONS), None
+            )
+
+            is_approved = False
+            if critical_action:
+                action_name = critical_action["action"]
+                target_name = critical_action.get("target", asset.get("component_id", "Target Asset"))
+
+                approval_event = asyncio.Event()
+                approval_record = {
+                    "event": approval_event,
+                    "approved": False,
+                    "action": action_name,
+                    "target": target_name,
+                    "responded": False,
+                }
+                PENDING_APPROVALS[run_id] = approval_record
+
+                print(f"[HITL] Pausing worker for run_id={run_id}. Approval required for {action_name} on {target_name}")
+
+                # Emit approval_required SSE event
+                yield {
+                    "event": "approval_required",
+                    "data": json.dumps({
+                        "run_id": run_id,
+                        "action": action_name,
+                        "target": target_name,
+                        "severity": "CRITICAL",
+                        "timeout_sec": 30,
+                    }),
+                }
+
+                # Pause the worker thread using an asyncio.Event associated with run_id
+                # Wait up to 30 seconds for operator response via POST /api/approve-action {"run_id": str, "approve": bool}
+                try:
+                    await asyncio.wait_for(approval_event.wait(), timeout=30.0)
+                    is_approved = approval_record.get("approved", False)
+                except asyncio.TimeoutError:
+                    print(f"[HITL] ⏱ Approval timed out after 30s for run_id={run_id}")
+                    is_approved = False
+                finally:
+                    PENDING_APPROVALS.pop(run_id, None)
+
+                # If approved (True): Execute the action and emit event: "action" with status "[AUTHORIZED & EXECUTED]"
+                # If denied (False) or timed out: Skip the action, log "[DENIED BY OPERATOR / TIMED OUT]", and continue the pipeline safely.
+                if is_approved:
+                    critical_action["status"] = "[AUTHORIZED & EXECUTED]"
+                    print(f"[HITL] Operator APPROVED: {action_name} on {target_name} -> [AUTHORIZED & EXECUTED]")
+                else:
+                    critical_action["status"] = "[DENIED BY OPERATOR / TIMED OUT]"
+                    print(f"[HITL] Operator DENIED or TIMED OUT: {action_name} -> [DENIED BY OPERATOR / TIMED OUT]")
+
             now_iso = datetime.now(timezone.utc).isoformat()
             for a in actions:
                 a["timestamp"] = now_iso
@@ -387,8 +471,11 @@ async def stream_pipeline(
                     "node": "dispatch_action",
                     "iteration": retry_count,
                     "actions": actions,
-                    "requires_authorization": is_critical,
-                    "authorization_status": "AUTHORIZED" if has_approval else "AUTO-MITIGATE",
+                    "run_id": run_id,
+                    "requires_authorization": critical_action is not None,
+                    "authorization_status": (
+                        "[AUTHORIZED & EXECUTED]" if is_approved else "[DENIED BY OPERATOR / TIMED OUT]"
+                    ) if critical_action else "AUTO-MITIGATE",
                 }),
             }
 
