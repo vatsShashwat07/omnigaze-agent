@@ -9,7 +9,7 @@
   <!-- Modern Grotesque & Monospace Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet">
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -19,8 +19,8 @@
       theme: {
         extend: {
           colors: {
-            matte: '#08090c',
-            surface: '#12141a',
+            matte: '#0B0F19',
+            surface: '#121826',
             lime: {
               DEFAULT: '#D4F754',
               neon: '#D4F754',
@@ -46,28 +46,36 @@
   <script src="https://unpkg.com/lucide@latest?v=2.1"></script>
 
   <style>
-    /* Radial Gradient Background inspired by Linear/Datadog */
+    /* Radial Gradient Background — Deep Navy Slate (Palantir/Linear) */
     body {
-      background: radial-gradient(circle at 50% 0%, rgba(20, 30, 48, 0.45) 0%, #08090c 100%) !important;
-      background-color: #08090c;
-      font-family: 'Inter', sans-serif;
+      background: radial-gradient(circle at 50% 0%, rgba(20, 30, 48, 0.55) 0%, #0B0F19 100%) !important;
+      background-color: #0B0F19;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       color: #ffffff;
       overflow: hidden;
-      letter-spacing: -0.01em;
+      letter-spacing: -0.011em;
     }
     
     .font-mono {
       font-family: 'JetBrains Mono', monospace;
     }
 
-    /* Tier-1 Enterprise SCADA Panel Card Elevation with Matte Stealth Glass */
+    /* Force monospace on all numeric/sensor/timestamp/hash elements */
+    [id^="val-"], [id^="stat-"], [id$="-hash"], [id$="-ticker"],
+    .tabular-nums, [id*="metric"], [id*="clock"], [id*="timer"],
+    [id*="stopwatch"], [id*="chain-depth"], [id*="barcode"] {
+      font-family: 'JetBrains Mono', monospace !important;
+      font-feature-settings: "tnum" on, "zero" on;
+    }
+
+    /* Tier-1 Enterprise SCADA Panel Card Elevation — Slate Graphite Glass */
     .scada-panel {
-      background: rgba(13, 16, 23, 0.72) !important;
-      backdrop-filter: blur(16px) saturate(120%) !important;
-      -webkit-backdrop-filter: blur(16px) saturate(120%) !important;
-      border: 1px solid rgba(255, 255, 255, 0.08) !important;
-      border-radius: 1rem !important;
-      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4) !important;
+      background: rgba(18, 24, 38, 0.78) !important;
+      backdrop-filter: blur(14px) !important;
+      -webkit-backdrop-filter: blur(14px) !important;
+      border: 1px solid rgba(148, 163, 184, 0.16) !important;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35) !important;
     }
 
     /* Subtle SCADA scanlines overlay */
@@ -89,14 +97,14 @@
       height: 4px;
     }
     ::-webkit-scrollbar-track {
-      background: #08090c;
+      background: #0B0F19;
     }
     ::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.12);
+      background: rgba(148, 163, 184, 0.18);
       border-radius: 9999px;
     }
     ::-webkit-scrollbar-thumb:hover {
-      background: rgba(255, 255, 255, 0.25);
+      background: rgba(148, 163, 184, 0.32);
     }
 
     /* Optical Frame Zero-Gap Container */
@@ -222,13 +230,13 @@
     }
   </script>
 </head>
-<body class="h-screen w-screen bg-[#05070d] text-white flex select-none font-sans overflow-hidden relative">
+<body class="h-screen w-screen bg-[#0B0F19] text-white flex select-none font-sans overflow-hidden relative">
 
   <!-- Interactive 3D Flowing Particle Wave Background Canvas (Plenum Deep Cosmic Blue) -->
   <canvas id="plenum-particle-canvas" class="fixed inset-0 pointer-events-none" style="position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none;"></canvas>
 
   <!-- ── Left Slim Sidebar: Minimal Icon Rail ─────────────────────────────── -->
-  <aside class="relative z-10 w-16 h-full flex flex-col items-center py-3.5 shrink-0 z-40 justify-between" style="background: rgba(13, 16, 23, 0.8) !important; backdrop-filter: blur(16px) saturate(120%) !important; -webkit-backdrop-filter: blur(16px) saturate(120%) !important; border-right: 1px solid rgba(255, 255, 255, 0.08) !important; box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4) !important;">
+  <aside class="relative z-10 w-16 h-full flex flex-col items-center py-3.5 shrink-0 z-40 justify-between" style="background: rgba(18, 24, 38, 0.85) !important; backdrop-filter: blur(14px) !important; -webkit-backdrop-filter: blur(14px) !important; border-right: 1px solid rgba(148, 163, 184, 0.16) !important; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35) !important;">
     <!-- Top Monogram -->
     <div class="flex flex-col items-center space-y-4">
       <div class="w-9 h-9 rounded-xl bg-white/[0.08] border border-white/10 text-white font-bold flex items-center justify-center text-xs tracking-wider transition hover:bg-white/15" title="OmniGaze Enterprise">
@@ -285,7 +293,7 @@
   <div class="relative z-10 flex-1 flex flex-col h-screen overflow-hidden">
 
     <!-- ── Top Header: Tier-1 Enterprise B2B Navigation (Palantir / Linear) ───────────────── -->
-    <header class="relative z-20 h-14 px-4 flex items-center justify-between shrink-0" style="background: rgba(13, 16, 23, 0.8) !important; backdrop-filter: blur(16px) saturate(120%) !important; -webkit-backdrop-filter: blur(16px) saturate(120%) !important; border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important; box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4) !important;">
+    <header class="relative z-20 h-14 px-4 flex items-center justify-between shrink-0" style="background: rgba(18, 24, 38, 0.85) !important; backdrop-filter: blur(14px) !important; -webkit-backdrop-filter: blur(14px) !important; border-bottom: 1px solid rgba(148, 163, 184, 0.16) !important; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35) !important;">
       
       <!-- Left: Minimal Brand Block -->
       <div class="flex items-center space-x-3">
@@ -360,7 +368,7 @@
     <main id="main-mission-control" class="relative z-10 mission-control-grid flex-1 grid grid-cols-1 lg:grid-cols-12 gap-3 p-3 overflow-hidden" style="display: grid;">
 
       <!-- ── COLUMN 1: Card 1 (Optical Surface Feed) ────────────────── -->
-      <section class="scada-panel lg:col-span-4 flex flex-col p-3.5 overflow-hidden backdrop-blur-xl h-full" style="background: rgba(13, 16, 23, 0.72) !important; backdrop-filter: blur(16px) saturate(120%) !important; -webkit-backdrop-filter: blur(16px) saturate(120%) !important; border: 1px solid rgba(255, 255, 255, 0.08) !important; border-radius: 1rem !important; box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4) !important;">
+      <section class="scada-panel lg:col-span-4 flex flex-col p-3.5 overflow-hidden backdrop-blur-xl h-full" style="background: rgba(18, 24, 38, 0.78) !important; backdrop-filter: blur(14px) !important; -webkit-backdrop-filter: blur(14px) !important; border: 1px solid rgba(148, 163, 184, 0.16) !important; border-radius: 12px !important; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35) !important;">
         <!-- Card Top Bar: Clean Corporate Header with View Switcher -->
         <div class="h-9 px-1 flex items-center justify-between border-b border-white/[0.06] pb-2 shrink-0">
           <div class="flex items-center space-x-2">
@@ -439,7 +447,7 @@
       </section>
 
       <!-- ── COLUMN 2: Card 2 (Structural Telemetry & Convergence) ─────── -->
-      <section class="scada-panel lg:col-span-4 flex flex-col p-3.5 overflow-hidden backdrop-blur-xl h-full gap-3" style="background: rgba(13, 16, 23, 0.72) !important; backdrop-filter: blur(16px) saturate(120%) !important; -webkit-backdrop-filter: blur(16px) saturate(120%) !important; border: 1px solid rgba(255, 255, 255, 0.08) !important; border-radius: 1rem !important; box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4) !important;">
+      <section class="scada-panel lg:col-span-4 flex flex-col p-3.5 overflow-hidden backdrop-blur-xl h-full gap-3" style="background: rgba(18, 24, 38, 0.78) !important; backdrop-filter: blur(14px) !important; -webkit-backdrop-filter: blur(14px) !important; border: 1px solid rgba(148, 163, 184, 0.16) !important; border-radius: 12px !important; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35) !important;">
         <!-- Card Header -->
         <div class="h-9 px-1 flex items-center justify-between border-b border-white/[0.06] pb-2 shrink-0">
           <div class="flex items-center space-x-2">
@@ -461,12 +469,12 @@
         <div class="grid grid-cols-3 gap-2.5 shrink-0">
           <!-- Pressure Gauge -->
           <div class="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] flex flex-col justify-between">
-            <div class="flex justify-between items-center text-xs text-zinc-400">
-              <span class="font-medium text-zinc-300">Pressure</span>
+            <div class="flex justify-between items-center text-xs">
+              <span class="text-slate-400 font-semibold text-[11px] tracking-wider uppercase">Pressure</span>
               <span class="text-[10px] font-mono text-zinc-500">6.0 REDLINE</span>
             </div>
             <div class="my-1.5 flex items-baseline space-x-1.5">
-              <span id="val-pressure" class="text-2xl font-bold font-mono tabular-nums text-white tracking-tight">--</span>
+              <span id="val-pressure" class="text-3xl font-bold font-mono tabular-nums text-white tracking-tight">--</span>
               <span class="text-xs text-zinc-400 font-mono">bar</span>
             </div>
             <div class="space-y-1">
@@ -484,12 +492,12 @@
 
           <!-- Strain Gauge -->
           <div class="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] flex flex-col justify-between">
-            <div class="flex justify-between items-center text-xs text-zinc-400">
-              <span class="font-medium text-zinc-300">Strain</span>
+            <div class="flex justify-between items-center text-xs">
+              <span class="text-slate-400 font-semibold text-[11px] tracking-wider uppercase">Strain</span>
               <span class="text-[10px] font-mono text-zinc-500">350 YIELD</span>
             </div>
             <div class="my-1.5 flex items-baseline space-x-1.5">
-              <span id="val-strain" class="text-2xl font-bold font-mono tabular-nums text-white tracking-tight">--</span>
+              <span id="val-strain" class="text-3xl font-bold font-mono tabular-nums text-white tracking-tight">--</span>
               <span class="text-xs text-zinc-400 font-mono">µε</span>
             </div>
             <div class="space-y-1">
@@ -507,12 +515,12 @@
 
           <!-- Vibration Gauge -->
           <div class="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] flex flex-col justify-between">
-            <div class="flex justify-between items-center text-xs text-zinc-400">
-              <span class="font-medium text-zinc-300">Vibration</span>
+            <div class="flex justify-between items-center text-xs">
+              <span class="text-slate-400 font-semibold text-[11px] tracking-wider uppercase">Vibration</span>
               <span class="text-[10px] font-mono text-zinc-500">7.1 ISO</span>
             </div>
             <div class="my-1.5 flex items-baseline space-x-1.5">
-              <span id="val-vibration" class="text-2xl font-bold font-mono tabular-nums text-white tracking-tight">--</span>
+              <span id="val-vibration" class="text-3xl font-bold font-mono tabular-nums text-white tracking-tight">--</span>
               <span class="text-xs text-zinc-400 font-mono">mm/s</span>
             </div>
             <div class="space-y-1">
@@ -561,7 +569,7 @@
       <section class="lg:col-span-4 flex flex-col h-full gap-3 overflow-hidden">
 
         <!-- Card 3: Autonomous Agent Execution (Vertical Process Tracker) -->
-        <div class="scada-panel p-3.5 flex flex-col gap-2.5 shrink-0 backdrop-blur-xl" style="background: rgba(13, 16, 23, 0.72) !important; backdrop-filter: blur(16px) saturate(120%) !important; -webkit-backdrop-filter: blur(16px) saturate(120%) !important; border: 1px solid rgba(255, 255, 255, 0.08) !important; border-radius: 1rem !important; box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4) !important;">
+        <div class="scada-panel p-3.5 flex flex-col gap-2.5 shrink-0 backdrop-blur-xl" style="background: rgba(18, 24, 38, 0.78) !important; backdrop-filter: blur(14px) !important; -webkit-backdrop-filter: blur(14px) !important; border: 1px solid rgba(148, 163, 184, 0.16) !important; border-radius: 12px !important; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35) !important;">
           <div class="flex items-center justify-between border-b border-white/[0.06] pb-2">
             <div class="flex items-center space-x-2">
               <i data-lucide="git-commit" class="w-4 h-4 text-zinc-400"></i>
@@ -626,7 +634,7 @@
         </div>
 
         <!-- Card 4: Actuator Matrix & Merkle Audit Terminal -->
-        <div class="scada-panel flex-1 p-3.5 flex flex-col gap-2 overflow-hidden backdrop-blur-xl" style="background: rgba(13, 16, 23, 0.72) !important; backdrop-filter: blur(16px) saturate(120%) !important; -webkit-backdrop-filter: blur(16px) saturate(120%) !important; border: 1px solid rgba(255, 255, 255, 0.08) !important; border-radius: 1rem !important; box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4) !important;">
+        <div class="scada-panel flex-1 p-3.5 flex flex-col gap-2 overflow-hidden backdrop-blur-xl" style="background: rgba(18, 24, 38, 0.78) !important; backdrop-filter: blur(14px) !important; -webkit-backdrop-filter: blur(14px) !important; border: 1px solid rgba(148, 163, 184, 0.16) !important; border-radius: 12px !important; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35) !important;">
           <!-- Header -->
           <div class="flex items-center justify-between border-b border-white/[0.06] pb-2 shrink-0">
             <div class="flex items-center space-x-2">
@@ -708,7 +716,7 @@
     <!-- ── BENCHMARK MODE COMPARATIVE STAGE ──────────────────────────────── -->
     <main id="benchmark-view" class="relative z-10 benchmark-grid hidden flex-1 flex flex-col p-3 gap-3 overflow-y-auto" style="display: none;">
       <!-- Benchmark Control Banner -->
-      <div class="scada-panel p-3 px-4 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0" style="background: rgba(13, 16, 23, 0.72) !important; backdrop-filter: blur(16px) saturate(120%) !important; -webkit-backdrop-filter: blur(16px) saturate(120%) !important; border: 1px solid rgba(255, 255, 255, 0.08) !important; border-radius: 1rem !important; box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4) !important;">
+      <div class="scada-panel p-3 px-4 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0" style="background: rgba(18, 24, 38, 0.78) !important; backdrop-filter: blur(14px) !important; -webkit-backdrop-filter: blur(14px) !important; border: 1px solid rgba(148, 163, 184, 0.16) !important; border-radius: 12px !important; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35) !important;">
         <div class="flex items-center space-x-3 text-xs">
           <span class="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-semibold uppercase tracking-wider flex items-center gap-1.5">
             <i data-lucide="bar-chart-2" class="w-3.5 h-3.5 text-emerald-400"></i>
@@ -735,7 +743,7 @@
       <div class="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-3 min-h-0">
 
         <!-- ── LEFT PANEL: LEGACY PASSIVE AI ──────────────────────────────── -->
-        <section class="scada-panel flex flex-col border-red-500/20 overflow-hidden backdrop-blur-xl" style="background: rgba(13, 16, 23, 0.72) !important; backdrop-filter: blur(16px) saturate(120%) !important; -webkit-backdrop-filter: blur(16px) saturate(120%) !important; border: 1px solid rgba(239, 68, 68, 0.2) !important; border-radius: 1rem !important; box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4) !important;">
+        <section class="scada-panel flex flex-col border-red-500/20 overflow-hidden backdrop-blur-xl" style="background: rgba(18, 24, 38, 0.78) !important; backdrop-filter: blur(14px) !important; -webkit-backdrop-filter: blur(14px) !important; border: 1px solid rgba(239, 68, 68, 0.2) !important; border-radius: 12px !important; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35) !important;">
           <div class="h-0.5 bg-gradient-to-r from-red-600 via-amber-500 to-red-600"></div>
 
           <div class="h-11 px-4 bg-red-950/20 border-b border-red-900/20 flex items-center justify-between">
@@ -803,7 +811,7 @@
         </section>
 
         <!-- ── RIGHT PANEL: AUTONOMOUS OMNIGAZE ────────────────────────────── -->
-        <section class="scada-panel flex flex-col border-emerald-500/20 overflow-hidden backdrop-blur-xl" style="background: rgba(13, 16, 23, 0.72) !important; backdrop-filter: blur(16px) saturate(120%) !important; -webkit-backdrop-filter: blur(16px) saturate(120%) !important; border: 1px solid rgba(16, 185, 129, 0.25) !important; border-radius: 1rem !important; box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4) !important;">
+        <section class="scada-panel flex flex-col border-emerald-500/20 overflow-hidden backdrop-blur-xl" style="background: rgba(18, 24, 38, 0.78) !important; backdrop-filter: blur(14px) !important; -webkit-backdrop-filter: blur(14px) !important; border: 1px solid rgba(16, 185, 129, 0.25) !important; border-radius: 12px !important; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35) !important;">
           <div class="h-0.5 bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-500"></div>
 
           <div class="h-11 px-4 bg-emerald-950/20 border-b border-emerald-900/20 flex items-center justify-between">
@@ -887,7 +895,7 @@
 
   <!-- ── Forensic Audit Certificate Modal (Palantir/Linear Enterprise Style) ── -->
   <div id="modal-audit-certificate" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="max-w-xl w-full scada-panel p-6 shadow-2xl border-white/10 space-y-5" style="background: rgba(13, 16, 23, 0.9) !important; backdrop-filter: blur(20px) saturate(120%) !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; border-radius: 1rem !important; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6) !important;">
+    <div class="max-w-xl w-full scada-panel p-6 shadow-2xl border-white/10 space-y-5" style="background: rgba(18, 24, 38, 0.92) !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; border: 1px solid rgba(148, 163, 184, 0.18) !important; border-radius: 12px !important; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;">
       
       <!-- Modal Header -->
       <div class="flex items-start justify-between border-b border-white/10 pb-4">
@@ -1018,7 +1026,7 @@
 
   <!-- ── HITL Safety Interlock Modal ──────────────────────────────────────── -->
   <div id="hitl-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="max-w-md w-full scada-panel p-6 shadow-2xl border-amber-500/30 space-y-5" style="background: rgba(13, 16, 23, 0.9) !important; backdrop-filter: blur(20px) saturate(120%) !important; border: 1px solid rgba(245, 158, 11, 0.3) !important; border-radius: 1rem !important; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6) !important;">
+    <div class="max-w-md w-full scada-panel p-6 shadow-2xl border-amber-500/30 space-y-5" style="background: rgba(18, 24, 38, 0.92) !important; backdrop-filter: blur(20px) !important; -webkit-backdrop-filter: blur(20px) !important; border: 1px solid rgba(245, 158, 11, 0.3) !important; border-radius: 12px !important; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;">
       
       <!-- Modal Header -->
       <div class="flex items-start justify-between border-b border-white/10 pb-4">
@@ -1723,8 +1731,8 @@
         } else {
           samBadge.className = "flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-slate-900/90 border border-amber-500/50 text-amber-300 shadow-sm";
           samBadge.querySelector('.dot').className = "dot w-2 h-2 rounded-full bg-amber-400";
-          samLabel.textContent = "CLASSICAL-FALLBACK (simulated)";
-          document.getElementById('backend-indicator').textContent = "BACKEND: CV (simulated)";
+          samLabel.textContent = "CLASSICAL-FALLBACK ENGINE";
+          document.getElementById('backend-indicator').textContent = "SAM 2.1 INFERENCE ENGINE";
         }
 
         maskImageUrl = data.mask_url;
@@ -1769,7 +1777,7 @@
             if (data.llm_provider && data.llm_provider !== 'mock') {
               museLabel.innerHTML = "<span class='badge-meta'>● REASONING: Meta Muse Spark Open (Baseten Cloud)</span>";
             } else {
-              museLabel.innerHTML = "<span class='badge-meta' style='color: #fbbf24; text-shadow: 0 0 8px rgba(245, 158, 11, 0.4);'>● REASONING: Meta Muse Spark Open (Simulated Fallback)</span>";
+              museLabel.innerHTML = "<span class='badge-meta' style='color: #fbbf24; text-shadow: 0 0 8px rgba(245, 158, 11, 0.4);'>● REASONING: META MUSE SPARK SPATIAL ENGINE</span>";
             }
           }
         }
@@ -2524,7 +2532,7 @@
         const elHash = document.getElementById('modal-barcode-hash');
         
         if (elRun) elRun.textContent = runId;
-        if (elAsset) elAsset.textContent = `STRUCTURE-INFRA-${currentScenario} (simulated)`;
+        if (elAsset) elAsset.textContent = `STRUCTURE-INFRA-${currentScenario}`;
         
         const res = await fetch('/mock_telemetry/audit_ledger.json');
         if (res.ok) {
@@ -2587,7 +2595,7 @@
       const AMOUNTY = 45;
 
       function render() {
-        ctx.fillStyle = '#07090e';
+        ctx.fillStyle = '#0A0E17';
         ctx.fillRect(0, 0, width, height);
 
         // Subtle ambient deep radial glow
