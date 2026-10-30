@@ -45,12 +45,13 @@ if str(_PROJECT_ROOT) not in sys.path:
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from sse_starlette.sse import EventSourceResponse
 
 from core.agent_graph import AgentState, build_agent_graph
+from core.audit_ledger import global_audit_ledger, generate_certificate_html
 from core.llm_client import MetaLLMClient, ThreatAssessment
 from core.vision_sam import SAMSegmenter, SegmentationResult
 from mock_telemetry.generate_synthetic_data import run as generate_data
@@ -108,7 +109,11 @@ async def get_dashboard() -> FileResponse:
             {"error": "static/index.html not found. Please build the dashboard UI."},
             status_code=404,
         )
-    return FileResponse(str(index_file))
+    response = FileResponse(str(index_file))
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
 
 @app.get("/api/status")
@@ -155,6 +160,9 @@ async def approve_action(req: ApprovalRequest) -> dict[str, Any]:
     run_id = req.run_id or req.scenario or "default"
     print(f"[API] /api/approve-action received for run_id={run_id}, approve={req.approve}")
 
+    if run_id not in PENDING_APPROVALS and PENDING_APPROVALS:
+        run_id = next(iter(PENDING_APPROVALS.keys()))
+
     if run_id in PENDING_APPROVALS:
         pending = PENDING_APPROVALS[run_id]
         pending["approved"] = bool(req.approve)
@@ -188,6 +196,31 @@ async def approve_action(req: ApprovalRequest) -> dict[str, Any]:
         "approved": req.approve,
         "approval": approval_record,
     }
+
+
+# ── Forensic Engineering Certificate Generator ─────────────────────────────────
+
+@app.get("/api/export-certificate/{run_id}", response_class=HTMLResponse)
+async def export_certificate(run_id: str):
+    """Render high-impact, standalone printable HTML/PDF forensic certificate."""
+    run_data = global_audit_ledger.get_run(run_id)
+    if not run_data:
+        # Fall back to latest recorded run
+        run_data = global_audit_ledger.get_latest_run()
+    if not run_data:
+        # Fallback minimal baseline record
+        run_data = {
+            "run_id": run_id,
+            "scenario": "SC-004",
+            "asset_id": "STRUCTURE-INFRA-SC-004",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "merkle_root": "0000000000000000000000000000000000000000000000000000000000000000",
+            "final_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+            "blocks": [],
+            "forensic_snapshot": {},
+        }
+    html = generate_certificate_html(run_data)
+    return HTMLResponse(content=html, status_code=200)
 
 
 # ── SSE Pipeline Stream ───────────────────────────────────────────────────────
@@ -501,6 +534,19 @@ async def stream_pipeline(
             }),
         }
 
+        # Cryptographic Audit Block: Ingestion
+        blk_ingest = global_audit_ledger.record_step(
+            run_id=run_id,
+            step_name="INGEST",
+            payload_data={"asset": asset, "sensors": sensors},
+            scenario=normalized_scenario,
+            asset_id=asset.get("id", ""),
+        )
+        yield {
+            "event": "audit_block",
+            "data": json.dumps(blk_ingest),
+        }
+
         # ── Step 2: Segment Defect (SAM 2) ────────────────────────────────────
         await asyncio.sleep(0.5)
         segmenter = SAMSegmenter()
@@ -523,6 +569,22 @@ async def stream_pipeline(
                 "raw_image_url": f"{raw_web_url}?t={int(time.time() * 1000)}",
                 "overlay_b64": seg_dict.get("overlay_b64", ""),
             }),
+        }
+
+        # Cryptographic Audit Block: SAM 2 Segmentation
+        blk_segment = global_audit_ledger.record_step(
+            run_id=run_id,
+            step_name="SAM_SEGMENTATION",
+            payload_data={
+                "defect_count": seg_dict.get("defect_count", 0),
+                "total_defect_area_pct": round(seg_dict.get("total_defect_area_pct", 0.0), 4),
+                "backend": seg_dict.get("backend", "classical-fallback"),
+                "defects": seg_dict.get("defects", []),
+            },
+        )
+        yield {
+            "event": "audit_block",
+            "data": json.dumps(blk_segment),
         }
 
         # ── Step 3: Spatial Reasoning (Meta Muse Spark Open) ──────────────────
@@ -567,6 +629,25 @@ async def stream_pipeline(
                 "affected_zone": ass_dict.get("affected_zone", ""),
                 "requires_hitl": is_critical and not has_approval,
             }),
+        }
+
+        # Cryptographic Audit Block: Meta Muse Spark Reasoning
+        blk_reason = global_audit_ledger.record_step(
+            run_id=run_id,
+            step_name="MUSE_REASONING",
+            payload_data={
+                "severity": ass_dict.get("severity", "moderate").upper(),
+                "confidence": round(ass_dict.get("confidence", 0.75), 2),
+                "model": "meta-models/muse-spark-open",
+                "llm_provider": ass_dict.get("llm_provider", "mock"),
+                "reasoning": ass_dict.get("reasoning", ""),
+                "recommended_actions": ass_dict.get("recommended_actions", []),
+                "affected_zone": ass_dict.get("affected_zone", ""),
+            },
+        )
+        yield {
+            "event": "audit_block",
+            "data": json.dumps(blk_reason),
         }
 
         # ── Loop: Dispatch Action & Verify Recovery (with retry for SC-004) ───
@@ -705,6 +786,22 @@ async def stream_pipeline(
                     critical_action["status"] = "[DENIED BY OPERATOR / TIMED OUT]"
                     print(f"[HITL] Operator DENIED or TIMED OUT: {action_name} -> [DENIED BY OPERATOR / TIMED OUT]")
 
+                # Cryptographic Audit Block: Operator HITL Authorization
+                blk_auth = global_audit_ledger.record_step(
+                    run_id=run_id,
+                    step_name="OPERATOR_HITL_AUTH",
+                    payload_data={
+                        "action": action_name,
+                        "target": target_name,
+                        "approved": is_approved,
+                        "status": critical_action["status"],
+                    },
+                )
+                yield {
+                    "event": "audit_block",
+                    "data": json.dumps(blk_auth),
+                }
+
             now_iso = datetime.now(timezone.utc).isoformat()
             for a in actions:
                 a["timestamp"] = now_iso
@@ -722,6 +819,23 @@ async def stream_pipeline(
                         "[AUTHORIZED & EXECUTED]" if is_approved else "[DENIED BY OPERATOR / TIMED OUT]"
                     ) if critical_action else "AUTO-MITIGATE",
                 }),
+            }
+
+            # Cryptographic Audit Block: Actuator Dispatch
+            blk_action = global_audit_ledger.record_step(
+                run_id=run_id,
+                step_name="ACTUATOR_DISPATCH",
+                payload_data={
+                    "iteration": retry_count,
+                    "actions": actions,
+                    "authorization_status": (
+                        "[AUTHORIZED & EXECUTED]" if is_approved else "[DENIED BY OPERATOR / TIMED OUT]"
+                    ) if critical_action else "AUTO-MITIGATE",
+                },
+            )
+            yield {
+                "event": "audit_block",
+                "data": json.dumps(blk_action),
             }
 
             # ── Step 5: Verify Recovery ───────────────────────────────────────
@@ -777,6 +891,26 @@ async def stream_pipeline(
                 }),
             }
 
+            # Cryptographic Audit Block: Verification
+            blk_verify = global_audit_ledger.record_step(
+                run_id=run_id,
+                step_name="VERIFICATION",
+                payload_data={
+                    "recovery_confirmed": recovery_confirmed,
+                    "retry_count": retry_count,
+                    "post_sensors": {
+                        "vibration_rms_mm_s": post_vib,
+                        "strain_microstrain": post_strain,
+                        "pressure_psi": post_pres,
+                    },
+                    "stability_passed": threshold_ok,
+                },
+            )
+            yield {
+                "event": "audit_block",
+                "data": json.dumps(blk_verify),
+            }
+
         # ── Step 6: Complete Pipeline ─────────────────────────────────────────
         await asyncio.sleep(0.4)
         elapsed = time.perf_counter() - t_start
@@ -789,11 +923,29 @@ async def stream_pipeline(
             f"[VerifyRecovery] Stability check confirmed={recovery_confirmed} (retries={retry_count})",
         ]
 
+        # Cryptographic Audit Block: Pipeline Complete & Final Merkle Seal
+        blk_complete = global_audit_ledger.record_step(
+            run_id=run_id,
+            step_name="PIPELINE_COMPLETE",
+            payload_data={
+                "status": "COMPLETED",
+                "elapsed_seconds": round(elapsed, 2),
+                "actions_count": len(all_actions),
+                "recovery_confirmed": recovery_confirmed,
+            },
+        )
+        yield {
+            "event": "audit_block",
+            "data": json.dumps(blk_complete),
+        }
+
         yield {
             "event": "complete",
             "data": json.dumps({
                 "node": "pipeline_complete",
                 "status": "COMPLETED",
+                "run_id": run_id,
+                "merkle_root": blk_complete.get("merkle_root"),
                 "scenario": normalized_scenario,
                 "elapsed_seconds": round(elapsed, 2),
                 "audit_log": audit_log,
