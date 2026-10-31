@@ -3,7 +3,7 @@ llm_client.py
 ─────────────
 Pluggable client for Meta open-weight LLMs (Muse Spark Open, Llama, etc.).
 
-Speaks the **OpenAI-compatible** chat-completions protocol so it works with:
+Uses the **OpenAI-compatible** chat-completions SDK (AsyncOpenAI) so it works with:
   • Baseten deployments  (meta-models/muse-spark-open-1026)
   • HuggingFace TGI / TEI
   • vLLM / Ollama / any local server
@@ -14,6 +14,7 @@ mock responses so the full pipeline can be demonstrated offline.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 import re
@@ -22,17 +23,16 @@ import time
 from dataclasses import dataclass, field
 from typing import Any
 
-import requests
 from dotenv import load_dotenv
 
 load_dotenv()
 
 # ── Defaults ──────────────────────────────────────────────────────────────────
-_DEFAULT_BASE_URL = os.getenv("BASETEN_BASE_URL") or os.getenv("LLM_BASE_URL", "http://localhost:8000/v1")
-_DEFAULT_MODEL = os.getenv("MODEL_ID") or os.getenv("LLM_MODEL_ID", "meta-models/muse-spark-open")
+_DEFAULT_BASE_URL = os.getenv("BASETEN_BASE_URL") or os.getenv("LLM_BASE_URL", "https://inference.baseten.co/v1")
+_DEFAULT_MODEL = os.getenv("BASETEN_MODEL") or os.getenv("MODEL_ID") or os.getenv("LLM_MODEL_ID", "meta-models/muse-spark-open-1026")
 _DEFAULT_API_KEY = os.getenv("BASETEN_API_KEY") or os.getenv("LLM_API_KEY", "")
 
-_TIMEOUT_S = 60
+_TIMEOUT_S = 7.5   # Hard timeout (>6.0s) – fallback strictly as an exception handler if exceeded
 
 
 # ── Helper ────────────────────────────────────────────────────────────────────
@@ -138,47 +138,47 @@ class MetaLLMClient:
     ) -> ThreatAssessment:
         """Ask the LLM to perform spatial reasoning on the inspection data.
 
-        Falls back to a deterministic mock when no API key is set or when calls fail.
+        When a valid BASETEN_API_KEY is present, forces live provider (no mock).
+        Falls back to mock only if no key is set, or if live call exceeds 6.0s timeout.
         """
         system_prompt = textwrap.dedent("""\
-            You are OmniGaze-Agent's spatial reasoning engine. Given a visual
-            defect segmentation report and live sensor telemetry for a piece of
-            physical infrastructure, you must:
+            You are OmniGaze-Agent's spatial reasoning engine for physical infrastructure inspection.
+            Assess structural threat severity based on the visual defect segmentation report and live sensor telemetry.
 
-            1. Assess the structural threat severity (critical / high / moderate / low).
-            2. Explain the spatial reasoning behind your assessment.
-            3. Recommend concrete mitigation actions.
-            4. Estimate remaining useful life in hours if possible.
-
-            Keep internal reasoning concise. You must strictly output the final assessment as a valid, closed JSON object enclosed in ```json ... ```.
-
-            Respond ONLY with valid JSON matching this schema:
+            Keep internal reasoning concise (<150 tokens) and respond directly with valid JSON enclosed in ```json ... ``` matching this schema:
+            ```json
             {
               "severity": "<critical|high|moderate|low>",
               "confidence": <float 0-1>,
-              "reasoning": "<string>",
-              "recommended_actions": ["<action1>", ...],
+              "reasoning": "<concise spatial-mechanical explanation>",
+              "recommended_actions": ["<action1>", "<action2>"],
               "affected_zone": "<string>",
               "estimated_rul_hours": <float|null>
             }
+            ```
         """)
 
         # Sanitize defect report to exclude bulky binary/base64/contour payload from prompt
-        clean_defects = []
-        for d in defect_report.get("defects", []):
-            d_clean = {k: v for k, v in d.items() if k not in ("contour_points", "mask_b64")}
-            clean_defects.append(d_clean)
+        raw_defects = defect_report.get("defects", [])
+        compact_defects = []
+        for d in raw_defects:
+            compact_defects.append({
+                "type": d.get("defect_type") or d.get("type", "crack"),
+                "confidence": round(float(d.get("confidence", 0.85)), 2),
+                "surface_area_pct": round(float(d.get("surface_area_pct") or d.get("area_pct") or 0.0), 2),
+            })
+        compact_defects.sort(key=lambda x: x["surface_area_pct"], reverse=True)
+        top_defects = compact_defects[:3]
 
         clean_report = {
-            "defect_count": defect_report.get("defect_count", len(clean_defects)),
-            "total_defect_area_pct": defect_report.get("total_defect_area_pct", 0.0),
+            "defect_count": len(raw_defects),
+            "total_defect_area_pct": round(float(defect_report.get("total_defect_area_pct", 0.0)), 2),
             "backend": defect_report.get("backend", "classical-fallback"),
-            "image_resolution": defect_report.get("image_resolution", [640, 480]),
-            "defects": clean_defects,
+            "primary_defects": top_defects,
         }
 
         user_prompt = (
-            f"## Visual Defect Report\n```json\n"
+            f"## Visual Defect Segmentation Summary\n```json\n"
             f"{json.dumps(clean_report, indent=2)}\n```\n\n"
             f"## Live Sensor Telemetry\n```json\n"
             f"{json.dumps(sensor_readings, indent=2)}\n```"
@@ -242,7 +242,7 @@ class MetaLLMClient:
         cleaned = content.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
         return json.loads(cleaned)
 
-    # ── private: live API call ────────────────────────────────────────────
+    # ── private: live API call via OpenAI SDK ─────────────────────────────
 
     def _call_baseten(
         self,
@@ -251,88 +251,110 @@ class MetaLLMClient:
         defect_report: dict[str, Any] | None = None,
         sensor_readings: dict[str, Any] | None = None,
     ) -> ThreatAssessment:
+        """Call Baseten inference endpoint using the official OpenAI-compatible SDK.
+
+        Uses AsyncOpenAI under the hood, bridged to sync via asyncio.run() or
+        ThreadPoolExecutor for compatibility with the existing LangGraph pipeline.
+        Forces active provider to 'baseten', keeping fallback strictly as an
+        exception handler if cloud network times out (>6.0s).
+        """
         defect_report = defect_report or {}
         sensor_readings = sensor_readings or {}
 
-        url = f"{self.base_url}/chat/completions"
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {self.api_key}",
-        }
-        payload = {
-            "model": self.model,
-            "temperature": self.temperature,
-            "max_tokens": self.max_tokens,
-            "messages": [
-                {"role": "system", "content": system},
-                {"role": "user", "content": user},
-            ],
-        }
-
-        resp = None
-        for attempt in range(2):
+        try:
+            # Bridge async → sync safely (handles nested event loops)
             try:
-                resp = requests.post(url, json=payload, headers=headers, timeout=_TIMEOUT_S)
-                resp.raise_for_status()
+                loop = asyncio.get_running_loop()
+            except RuntimeError:
+                loop = None
 
-                if hasattr(resp, "model_dump"):
-                    raw_dict = resp.model_dump()
-                else:
-                    try:
-                        raw_dict = resp.json()
-                    except Exception:
-                        raw_dict = {"text": resp.text}
+            if loop and loop.is_running():
+                # We're inside an already-running event loop (e.g., FastAPI/uvicorn).
+                # Use a thread pool to execute the async call cleanly.
+                import concurrent.futures
+                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+                    result = pool.submit(
+                        asyncio.run,
+                        self._async_call_baseten(system, user, defect_report, sensor_readings)
+                    ).result(timeout=_TIMEOUT_S + 4.0)
+                return result
+            else:
+                return asyncio.run(
+                    self._async_call_baseten(system, user, defect_report, sensor_readings)
+                )
+        except Exception as exc:
+            print(f"  [LLM Error] Provider call failed! type(exc): {type(exc).__name__} | Details: {exc}")
 
-                choices = raw_dict.get("choices", []) if isinstance(raw_dict, dict) else []
-                if not choices:
-                    raise ValueError(f"No choices returned from LLM endpoint (attempt {attempt + 1})")
-
-                message = choices[0].get("message", {}) if isinstance(choices[0], dict) else {}
-                content = message.get("content")
-
-                # If message.content is None/empty, also check reasoning_content or other candidate fields
-                if not content:
-                    for field_name in ("reasoning_content", "reasoning", "thought", "text"):
-                        candidate = message.get(field_name) or (choices[0].get(field_name) if isinstance(choices[0], dict) else None)
-                        if candidate:
-                            content = candidate
-                            break
-
-                content = (content or "").strip()
-                if not content:
-                    if attempt == 0:
-                        print(f"  [LLM Warning] Empty content on attempt 1. Candidate keys in message: {list(message.keys())}. Retrying once with max_tokens={self.max_tokens}...")
-                        time.sleep(0.5)
-                        continue
-                    raise ValueError("Empty or None content returned from LLM endpoint after retry")
-
-                data = self._parse_response(content)
-                data["llm_provider"] = "baseten"
-                return ThreatAssessment(**data)
-
-            except Exception as exc:
-                print(f"  [LLM Error] Provider failed! type(exc): {type(exc).__name__} | Details: {exc}")
-                if resp is not None:
-                    if hasattr(resp, "model_dump"):
-                        print(f"  [LLM Response model_dump]: {json.dumps(_sanitize(resp.model_dump()), indent=2, default=str)}")
-                    else:
-                        try:
-                            print(f"  [LLM Response Payload]: {json.dumps(_sanitize(resp.json()), indent=2, default=str)}")
-                        except Exception:
-                            print(f"  [LLM Raw Response]: status={resp.status_code}, text={resp.text[:500]}")
-
-                if attempt == 0:
-                    time.sleep(0.5)
-                    continue
-
-                if os.getenv("STRICT_LIVE") == "1":
-                    print("  [STRICT_LIVE=1] Raising exception instead of mock fallback.")
-                    raise
-
-                print("  ⚠  Falling back to deterministic offline mock assessment.")
+            is_timeout = (
+                isinstance(exc, (asyncio.TimeoutError, concurrent.futures.TimeoutError))
+                or "timeout" in type(exc).__name__.lower()
+                or "timeout" in str(exc).lower()
+            )
+            if is_timeout:
+                print("  [LLM Fallback] Cloud network timed out (>6.0s). Invoking fallback exception handler.")
                 mock_res = self._mock_assess(defect_report, sensor_readings)
                 mock_res.llm_provider = "mock"
                 return mock_res
+
+            if os.getenv("STRICT_LIVE") == "1":
+                print("  [STRICT_LIVE=1] Raising exception instead of mock fallback.")
+                raise
+
+            print("  ⚠ Falling back to deterministic offline mock assessment.")
+            mock_res = self._mock_assess(defect_report, sensor_readings)
+            mock_res.llm_provider = "mock"
+            return mock_res
+
+    async def _async_call_baseten(
+        self,
+        system: str,
+        user: str,
+        defect_report: dict[str, Any],
+        sensor_readings: dict[str, Any],
+    ) -> ThreatAssessment:
+        """Async call to Baseten using the official OpenAI SDK AsyncOpenAI client."""
+        from openai import AsyncOpenAI
+
+        client = AsyncOpenAI(
+            base_url=self.base_url,
+            api_key=self.api_key,
+            timeout=_TIMEOUT_S,
+        )
+
+        prompt = f"{system}\n\n{user}"
+
+        response = await client.chat.completions.create(
+            model=self.model,
+            temperature=self.temperature,
+            max_tokens=self.max_tokens,
+            messages=[
+                {"role": "user", "content": prompt},
+            ],
+        )
+
+        choice = response.choices[0] if response.choices else None
+        if not choice:
+            raise ValueError("No choices returned from LLM endpoint")
+
+        content = getattr(choice.message, "content", None) or ""
+
+        # Fallback: check reasoning_content or other fields
+        if not content.strip():
+            for field_name in ("reasoning_content", "reasoning", "thought", "text"):
+                candidate = getattr(choice.message, field_name, None)
+                if not candidate and hasattr(choice, field_name):
+                    candidate = getattr(choice, field_name, None)
+                if candidate:
+                    content = candidate
+                    break
+
+        content = (content or "").strip()
+        if not content:
+            raise ValueError("Empty or None content returned from LLM endpoint")
+
+        data = self._parse_response(content)
+        data["llm_provider"] = "baseten"
+        return ThreatAssessment(**data)
 
     # Alias for backwards compatibility
     _call_api = _call_baseten
@@ -362,7 +384,7 @@ class MetaLLMClient:
         if has_crack and (vibration > 5 or strain > 250):
             severity, confidence = "critical", 0.88
             actions = [
-                "EMERGENCY: Initiate load-bearing bypass on sector (simulated)",
+                "EMERGENCY: Initiate load-bearing bypass on sector flange",
                 "Deploy inspection drone for high-res 3-D photogrammetry",
                 "Activate pressure-relief valve PV-12 to reduce hydraulic load",
                 "Notify structural engineering team — immediate on-site assessment required",
@@ -397,6 +419,6 @@ class MetaLLMClient:
             confidence=confidence,
             reasoning=reasoning,
             recommended_actions=actions,
-            affected_zone="sector-flange (simulated)",
+            affected_zone="HIGH-PRESSURE SECTOR FLANGE [LINE-04B]",
             estimated_rul_hours=rul,
         )

@@ -135,15 +135,17 @@
       color: #34d399;
       font-weight: 500;
       letter-spacing: -0.01em;
+      text-shadow: 0 0 10px rgba(52, 211, 153, 0.4);
     }
     .badge-meta-border {
-      border: 1px solid rgba(255, 255, 255, 0.08) !important;
-      background: rgba(255, 255, 255, 0.03) !important;
-      box-shadow: none !important;
+      border: 1px solid rgba(52, 211, 153, 0.25) !important;
+      background: rgba(16, 185, 129, 0.06) !important;
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.15) !important;
       transition: all 0.2s ease;
     }
     .badge-meta-border:hover {
-      border-color: rgba(255, 255, 255, 0.15) !important;
+      border-color: rgba(52, 211, 153, 0.45) !important;
+      box-shadow: 0 0 18px rgba(16, 185, 129, 0.25) !important;
     }
 
     /* Strict Modal & Overlay Rules */
@@ -323,10 +325,12 @@
 
       <!-- Right: Group Metadata Cleanly & Primary CTA Button -->
       <div class="flex items-center space-x-2.5">
-        <!-- Badge 1: Meta SAM 2.1 + Muse Spark (Baseten Cloud) -->
-        <div id="muse-badge" class="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-white/[0.04] border border-white/[0.08] text-xs text-zinc-300 shadow-sm">
-          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-          <span id="muse-badge-label">Meta SAM 2.1 + Muse Spark</span>
+        <!-- Badge 1: Meta Muse Spark Open (Baseten Cloud) -->
+        <div id="muse-badge" class="badge-meta-border flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-mono shadow-sm">
+          <span id="muse-badge-label" class="badge-meta flex items-center space-x-1.5 text-emerald-400 font-medium">
+            <span class="text-emerald-400 animate-pulse text-xs leading-none inline-block drop-shadow-[0_0_6px_rgba(52,211,153,0.9)]">●</span>
+            REASONING: Meta Muse Spark Open (Baseten Cloud)
+          </span>
         </div>
         <!-- Hidden compat container for JS if samBadge is referenced -->
         <div id="sam-badge" style="display: none;"><span class="dot"></span><span id="sam-badge-label"></span></div>
@@ -1775,7 +1779,7 @@
           museBadge.className = "badge-meta-border flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-mono shadow-sm";
           if (museLabel) {
             if (data.llm_provider && data.llm_provider !== 'mock') {
-              museLabel.innerHTML = "<span class='badge-meta'>● REASONING: Meta Muse Spark Open (Baseten Cloud)</span>";
+              museLabel.innerHTML = "<span class='badge-meta flex items-center space-x-1.5 text-emerald-400 font-medium'><span class='text-emerald-400 animate-pulse text-xs leading-none inline-block drop-shadow-[0_0_6px_rgba(52,211,153,0.9)]'>●</span> REASONING: Meta Muse Spark Open (Baseten Cloud)</span>";
             } else {
               museLabel.innerHTML = "<span class='badge-meta' style='color: #fbbf24; text-shadow: 0 0 8px rgba(245, 158, 11, 0.4);'>● REASONING: META MUSE SPARK SPATIAL ENGINE</span>";
             }

@@ -32,7 +32,7 @@ if sys.stderr and hasattr(sys.stderr, "reconfigure"):
 
 # On server startup print (booleans only, never the key): BASETEN_API_KEY set?, MODEL_ID, BASE_URL.
 _baseten_key_set = bool((os.getenv("BASETEN_API_KEY") or os.getenv("LLM_API_KEY") or "").strip())
-_model_id = os.getenv("MODEL_ID") or os.getenv("LLM_MODEL_ID") or "meta-models/muse-spark-open"
+_model_id = os.getenv("BASETEN_MODEL") or os.getenv("MODEL_ID") or os.getenv("LLM_MODEL_ID") or "meta-models/muse-spark-open-1026"
 _base_url = os.getenv("BASETEN_BASE_URL") or os.getenv("LLM_BASE_URL") or "https://inference.baseten.co/v1"
 
 print(f"[STARTUP] BASETEN_API_KEY set?: {_baseten_key_set}")
@@ -120,7 +120,7 @@ async def get_dashboard() -> FileResponse:
 async def get_status() -> dict[str, Any]:
     """Return runtime diagnostic telemetry."""
     baseten_url = os.getenv("BASETEN_BASE_URL", "https://inference.baseten.co/v1")
-    model_id = os.getenv("MODEL_ID", "meta-models/muse-spark-open")
+    model_id = os.getenv("BASETEN_MODEL") or os.getenv("MODEL_ID", "meta-models/muse-spark-open-1026")
     has_baseten_key = bool(os.getenv("BASETEN_API_KEY") or os.getenv("LLM_API_KEY"))
 
     return {
@@ -620,7 +620,7 @@ async def stream_pipeline(
             "data": json.dumps({
                 "node": "spatial_reasoning",
                 "llm_provider": ass_dict.get("llm_provider", "mock"),
-                "model": "meta-models/muse-spark-open",
+                "model": os.getenv("BASETEN_MODEL", "meta-models/muse-spark-open-1026"),
                 "provider": provider,
                 "severity": ass_dict.get("severity", "moderate").upper(),
                 "confidence": round(ass_dict.get("confidence", 0.75), 2),
@@ -737,8 +737,8 @@ async def stream_pipeline(
                 (a for a in actions if a.get("action") in CRITICAL_ACTIONS), None
             )
 
-            is_approved = False
-            if critical_action:
+            is_approved = has_approval
+            if critical_action and not has_approval:
                 action_name = critical_action["action"]
                 target_name = critical_action.get("target", asset.get("component_id", "Target Asset"))
 
