@@ -432,7 +432,7 @@
           <!-- Clean Defect Badge at Top-Left: Deep Amber / Orange -->
           <div id="defect-tag" class="hidden absolute top-3.5 left-3.5 bg-amber-500/20 border border-amber-500/40 text-amber-200 text-xs px-3 py-1.5 rounded-lg shadow-xl font-mono font-semibold backdrop-blur-md flex items-center space-x-2">
             <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-            <span id="defect-type-label" class="tracking-wide">FATIGUE CRACK · 98.0% CONF</span>
+            <span id="defect-type-label" class="tracking-wide">DEFECT REGION ISOLATED · SAM 2.1 ZERO-SHOT MASK</span>
             <span id="defect-meta-label" class="hidden">Area: 0.00%</span>
           </div>
         </div>
@@ -459,8 +459,8 @@
             <span class="text-xs font-semibold text-zinc-200">Structural Telemetry & Convergence</span>
           </div>
           <div class="flex items-center space-x-2">
-            <button id="btn-inject-surge" onclick="injectStressSurge()" class="px-2.5 py-1 text-[11px] font-mono bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg transition-all flex items-center gap-1.5 active:scale-95" title="Simulate 6.8 bar emergency surge spike">
-              <span>⚡ SIMULATE SURGE</span>
+            <button id="btn-inject-surge" onclick="injectStressSurge()" class="px-2.5 py-1 text-[11px] font-mono bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg transition-all flex items-center gap-1.5 active:scale-95" title="Inject anomaly into digital twin replay stream (MODBUS/CAN)">
+              <span>⚡ INJECT ANOMALY (DIGITAL TWIN)</span>
             </button>
             <div id="twin-status-badge" class="px-2 py-0.5 rounded-md text-[10px] font-mono bg-white/[0.04] border border-white/10 text-zinc-400 flex items-center space-x-1.5">
               <span class="w-1.5 h-1.5 rounded-full bg-zinc-500"></span>
@@ -647,9 +647,9 @@
             </div>
             <div class="flex items-center space-x-2">
               <span id="action-count" class="px-2 py-0.5 rounded-md bg-white/[0.04] text-[10px] font-mono tabular-nums text-zinc-400 border border-white/5">3 DISPATCHED</span>
-              <button id="btn-export-audit-card" onclick="exportAuditCertificate()" class="px-2.5 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-mono font-medium text-emerald-400 flex items-center space-x-1.5 transition shadow-sm active:scale-95" title="Export ISO-10816 Certified Audit Record">
+              <button id="btn-export-audit-card" onclick="exportAuditCertificate()" class="border border-emerald-500/70 text-emerald-300 font-mono font-bold px-3 py-1 bg-slate-900/80 hover:bg-slate-800 rounded-lg text-[10px] flex items-center space-x-1.5 transition shadow-sm active:scale-95" title="Export tamper-evident SHA-256 hash-chained audit log">
                 <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
-                <span id="audit-btn-text">Export ISO-10816 Audit</span>
+                <span id="audit-btn-text">🛡️ EXPORT HASH-CHAINED AUDIT LOG</span>
               </button>
             </div>
           </div>
@@ -910,9 +910,9 @@
           <div>
             <div class="flex items-center space-x-2">
               <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]"></span>
-              <h3 class="text-xs sm:text-sm font-bold tracking-tight text-white uppercase font-mono">CRYPTOGRAPHIC AUDIT CERTIFICATE (ISO-10816 COMPLIANT)</h3>
+              <h3 class="text-xs sm:text-sm font-bold tracking-tight text-white uppercase font-mono">TAMPER-EVIDENT INSPECTION AUDIT RECORD (SHA-256 HASH CHAIN)</h3>
             </div>
-            <p class="text-[11px] text-slate-400 font-mono mt-0.5">SHA-256 IMMUTABLE MERKLE LEDGER · FORENSIC INTEGRITY PROOF</p>
+            <p class="text-[11px] text-slate-400 font-mono mt-0.5">Monitored against ISO-10816-3 Vibration Limits &amp; ASME B31.3 Stress Tolerances</p>
           </div>
         </div>
         <button id="btn-close-audit-x" onclick="closeAuditModal()" class="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition" title="Dismiss modal">
@@ -1036,9 +1036,9 @@
         <button id="btn-close-audit-modal" onclick="closeAuditModal()" class="py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600/60 text-slate-200 hover:text-white transition flex items-center justify-center space-x-1.5 active:scale-95" title="Dismiss modal">
           <span>Close</span>
         </button>
-        <button id="btn-download-audit-json" onclick="downloadAuditJsonBlob()" class="py-2.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black transition flex items-center justify-center space-x-1.5 shadow-sm active:scale-95 font-semibold" title="Download real JSON blob of Merkle audit chain">
+        <button id="btn-download-audit-json" onclick="downloadAuditJsonBlob()" class="py-2.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black transition flex items-center justify-center space-x-1.5 shadow-sm active:scale-95 font-semibold" title="Download real JSON blob of SHA-256 hash-chained audit record">
           <i data-lucide="download" class="w-4 h-4"></i>
-          <span>Download Merkle Audit Chain (JSON)</span>
+          <span>Download Audit Chain JSON</span>
         </button>
       </div>
 
@@ -1074,7 +1074,7 @@
         </div>
         <div class="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex justify-between items-center">
           <span class="text-zinc-500">TARGET ASSET</span>
-          <span id="hitl-target-asset" class="font-semibold text-white">sector-flange</span>
+          <span id="hitl-target-asset" class="font-semibold text-white">SEC-FLANGE-409 (DIGITAL TWIN ASSET)</span>
         </div>
         <div class="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex justify-between items-center">
           <span class="text-zinc-500">REASONING SOURCE</span>
@@ -1289,7 +1289,7 @@
       } else if (state === 'stabilized') {
         banner.className = 'relative z-10 mx-3 mt-2.5 px-4 py-2 rounded-xl text-xs font-mono font-semibold flex items-center justify-between transition-all duration-300 border bg-emerald-500/15 border-emerald-500/40 text-emerald-200 shadow-lg shadow-emerald-500/10 shrink-0';
         if (dot) dot.className = 'banner-dot w-2 h-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400';
-        if (msg) msg.textContent = '✔ CLOSED-LOOP STABILIZATION VERIFIED · ASSET SECURED · ESTIMATED DOWNTIME PREVENTED: $2.4M';
+        if (msg) msg.textContent = '✔ CLOSED-LOOP STABILIZATION VERIFIED · SYSTEM CONVERGED IN 1.82s';
         if (metric) metric.innerHTML = '<span class="text-emerald-400 font-bold">STABILIZED · ASSET SAFE</span>';
       } else {
         banner.className = 'relative z-10 mx-3 mt-2.5 px-4 py-2 rounded-xl text-xs font-mono font-medium flex items-center justify-between transition-all duration-300 border bg-white/[0.025] border-white/[0.08] text-slate-300 shadow-sm shrink-0';
@@ -1778,7 +1778,7 @@
           if (!typeStr.includes('DETECTED')) {
             typeStr += ' DETECTED';
           }
-          document.getElementById('defect-type-label').textContent = `${typeStr} · ${confStr}% CONF`;
+          document.getElementById('defect-type-label').textContent = `${typeStr} · DEFECT REGION ISOLATED · SAM 2.1 ZERO-SHOT MASK`;
           document.getElementById('defect-meta-label').textContent = `Area: ${Number(d0.surface_area_pct || 0).toFixed(2)}%`;
         }
 
@@ -1793,16 +1793,16 @@
 
         document.getElementById('stream-status').textContent = 'SPATIAL REASONING';
         
-        // Muse badge: Enterprise SCADA telemetry styling
+        // Muse badge: Dynamically render based on llm_provider
         const museBadge = document.getElementById('muse-badge');
         const museLabel = document.getElementById('muse-badge-label');
         if (museBadge) {
           museBadge.className = "badge-meta-border flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-mono shadow-sm";
           if (museLabel) {
-            if (data.llm_provider && data.llm_provider !== 'mock') {
-              museLabel.innerHTML = "<span class='badge-meta flex items-center space-x-1.5 text-emerald-400 font-medium'><span class='text-emerald-400 animate-pulse text-xs leading-none inline-block drop-shadow-[0_0_6px_rgba(52,211,153,0.9)]'>●</span> REASONING: Meta Muse Spark Open (Baseten Cloud)</span>";
+            if (data.llm_provider === 'baseten') {
+              museLabel.innerHTML = "<span class='badge-meta flex items-center space-x-1.5 text-emerald-400 font-medium'><span class='text-emerald-400 animate-pulse text-xs leading-none inline-block drop-shadow-[0_0_6px_rgba(52,211,153,0.9)]'>●</span> REASONING: Meta Muse Spark Open (Baseten Live)</span>";
             } else {
-              museLabel.innerHTML = "<span class='badge-meta' style='color: #fbbf24; text-shadow: 0 0 8px rgba(245, 158, 11, 0.4);'>● REASONING: META MUSE SPARK SPATIAL ENGINE</span>";
+              museLabel.innerHTML = "<span class='badge-meta' style='color: #fbbf24; text-shadow: 0 0 8px rgba(245, 158, 11, 0.4);'>● REASONING: Local Rule-Based Engine (Fallback Mode)</span>";
             }
           }
         }
@@ -2067,7 +2067,7 @@
         el.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span><span>WARNING${ratioStr}</span>`;
       } else {
         el.className = 'px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-950 border border-emerald-700 text-emerald-300 flex items-center space-x-1';
-        el.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span><span>STABLE${ratioStr}</span>`;
+        el.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span><span>STATUS: STABILIZED (WITHIN ASTM ENVELOPE)</span>`;
       }
     }
 
