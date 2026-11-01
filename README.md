@@ -149,7 +149,7 @@ Where $f_{\text{vibration}}$ is the dominant vibration frequency recorded by tri
 
 ## 3. System Architecture & 5-Stage LangGraph FSM
 
-OmniGaze executes as a high-frequency, event-driven deterministic Finite State Machine (FSM) constructed via **LangGraph**, providing Server-Sent Event (SSE) streaming at `http://127.0.0.1:8080/api/stream/{scenario}`.
+OmniGaze executes as a high-frequency, event-driven deterministic Finite State Machine (FSM) constructed via **LangGraph**, providing Server-Sent Event (SSE) streaming at `http://127.0.0.1:8000/api/stream/{scenario}`.
 
 ### 3.1 End-to-End Cyber-Physical Architecture Diagram
 
@@ -264,7 +264,7 @@ $$H_i = \text{SHA256}\Big(H_{i-1} \mathbin{\Vert} \text{Payload}_i \mathbin{\Ver
 
 Operators can verify execution integrity or download a standalone, air-gapped forensic audit certificate for insurance and regulatory reporting:
 ```http
-GET http://127.0.0.1:8080/api/export-certificate/{run_id}
+GET http://127.0.0.1:8000/api/export-certificate/{run_id}
 ```
 
 ---
@@ -329,7 +329,7 @@ python server.py
 ```
 
 Access the Mission Control Dashboard:
-👉 **[http://127.0.0.1:8080](http://127.0.0.1:8080)**
+👉 **[http://127.0.0.1:8000](http://127.0.0.1:8000)**
 
 ---
 
@@ -378,7 +378,7 @@ omnigaze-agent/
 ├── .gitignore                       # Production exclusion rules (.env, venv, caches)
 ├── README.md                        # Industrial Engineering Whitepaper & Specification
 ├── requirements.txt                 # Pinned dependencies (FastAPI, LangGraph, OpenAI SDK, OpenCV)
-├── server.py                        # FastAPI ASGI server with SSE streaming at :8080
+├── server.py                        # FastAPI ASGI server with SSE streaming at :8000
 ├── core/
 │   ├── __init__.py
 │   ├── agent_graph.py               # 5-Stage LangGraph StateGraph with dynamic retry edges
