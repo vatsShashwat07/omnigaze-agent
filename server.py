@@ -223,6 +223,45 @@ async def export_certificate(run_id: str):
     return HTMLResponse(content=html, status_code=200)
 
 
+# ── Scenario Selection Endpoint ───────────────────────────────────────────────
+
+@app.get("/api/select-scenario")
+async def select_scenario_endpoint(id: str = "SC-001") -> dict[str, Any]:
+    """Dynamically swap scenario, defect image, and telemetry stream metadata without hardcoded halts."""
+    norm_id = id.strip().upper()
+    if not norm_id.startswith("SC-"):
+        norm_id = f"SC-{norm_id}"
+
+    loop = asyncio.get_running_loop()
+    telemetry = await loop.run_in_executor(
+        None, lambda: generate_data(scenario=norm_id)
+    )
+    visual_path = telemetry.get("visual_frame", {}).get("path", "")
+    asset = telemetry.get("asset", {})
+
+    if visual_path:
+        vp = Path(visual_path)
+        if not vp.is_absolute():
+            raw_web_url = f"/{vp.as_posix().lstrip('/')}"
+        else:
+            try:
+                rel = vp.relative_to(_PROJECT_ROOT)
+                raw_web_url = f"/{rel.as_posix()}"
+            except Exception:
+                raw_web_url = f"/mock_telemetry/real_assets/{vp.name}" if "real_assets" in str(vp) else f"/mock_telemetry/{vp.name}"
+    else:
+        raw_web_url = "/mock_telemetry/synthetic_defect.png"
+
+    return {
+        "status": "ok",
+        "scenario": norm_id,
+        "asset_id": asset.get("id", f"STRUCTURE-INFRA-{norm_id}"),
+        "image_url": raw_web_url,
+        "sensors": telemetry.get("sensors", {}),
+        "telemetry": telemetry,
+    }
+
+
 # ── SSE Pipeline Stream ───────────────────────────────────────────────────────
 
 @app.get("/api/stream/{scenario}")
@@ -624,6 +663,9 @@ async def stream_pipeline(
                 "provider": provider,
                 "severity": ass_dict.get("severity", "moderate").upper(),
                 "confidence": round(ass_dict.get("confidence", 0.75), 2),
+                "hoop_stress_mpa": ass_dict.get("hoop_stress_mpa"),
+                "critical_yield_margin_pct": ass_dict.get("critical_yield_margin_pct"),
+                "valve_mitigation_parameters": ass_dict.get("valve_mitigation_parameters", {}),
                 "reasoning": ass_dict.get("reasoning", ""),
                 "recommended_actions": ass_dict.get("recommended_actions", []),
                 "affected_zone": ass_dict.get("affected_zone", ""),
@@ -638,6 +680,9 @@ async def stream_pipeline(
             payload_data={
                 "severity": ass_dict.get("severity", "moderate").upper(),
                 "confidence": round(ass_dict.get("confidence", 0.75), 2),
+                "hoop_stress_mpa": ass_dict.get("hoop_stress_mpa"),
+                "critical_yield_margin_pct": ass_dict.get("critical_yield_margin_pct"),
+                "valve_mitigation_parameters": ass_dict.get("valve_mitigation_parameters", {}),
                 "model": "meta-models/muse-spark-open",
                 "llm_provider": ass_dict.get("llm_provider", "mock"),
                 "reasoning": ass_dict.get("reasoning", ""),
@@ -666,23 +711,26 @@ async def stream_pipeline(
                 actions = [
                     {
                         "action": "pressure_valve_adjustment",
-                        "target": "PV-12",
-                        "parameter": "reduce_pressure_psi",
-                        "value": 45,
+                        "target": "RELIEF VALVE PV-12",
+                        "parameter": "throttle_reduction_pct",
+                        "value": -35.0,
+                        "display": "RELIEF VALVE PV-12 [THROTTLED -35%]",
                         "status": "executed",
                     },
                     {
                         "action": "emergency_lockdown",
-                        "target": asset.get("component_id") or "sector-flange (simulated)",
-                        "parameter": "access_restriction",
-                        "value": "full_lockdown",
+                        "target": "SECTOR FLANGE",
+                        "parameter": "isolation_barrier",
+                        "value": "ISOLATED & SEALED",
+                        "display": "SECTOR FLANGE [ISOLATED & SEALED]",
                         "status": "pending_authorization",
                     },
                     {
                         "action": "drone_repositioning",
-                        "target": "DJI-Mavic3-IR",
-                        "parameter": "new_altitude_m",
-                        "value": 5.0,
+                        "target": "DRONE IR RECON",
+                        "parameter": "flight_status",
+                        "value": "AIRBORNE",
+                        "display": "DRONE IR RECON [AIRBORNE]",
                         "status": "executed",
                     },
                 ]

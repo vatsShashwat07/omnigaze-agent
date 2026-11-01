@@ -1,7 +1,7 @@
 {
   "inspection_id": "SC-004",
   "scenario": "SC-004",
-  "timestamp": "2026-11-01T14:19:04.010750+00:00",
+  "timestamp": "2026-11-01T20:22:41.277392+00:00",
   "asset": {
     "id": "STRUCTURE-INFRA-SC-004 (simulated)",
     "type": "welded_structural_steel_joint",

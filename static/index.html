@@ -325,12 +325,13 @@
 
       <!-- Right: Group Metadata Cleanly & Primary CTA Button -->
       <div class="flex items-center space-x-2.5">
-        <!-- Badge 1: Meta Muse Spark Open (Baseten Cloud) -->
-        <div id="muse-badge" class="badge-meta-border flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-mono shadow-sm">
-          <span id="muse-badge-label" class="badge-meta flex items-center space-x-1.5 text-emerald-400 font-medium">
+        <!-- Badge 1: Meta Muse Spark Open (Baseten Live) -->
+        <div id="muse-badge" class="badge-meta-border flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-mono shadow-sm border border-emerald-500/40">
+          <span id="badge-reasoning" class="badge-meta flex items-center space-x-1.5 text-emerald-400 font-medium">
             <span class="text-emerald-400 animate-pulse text-xs leading-none inline-block drop-shadow-[0_0_6px_rgba(52,211,153,0.9)]">●</span>
-            REASONING: Meta Muse Spark Open (Baseten Cloud)
+            REASONING: Meta Muse Spark Open (Baseten Live)
           </span>
+          <span id="muse-badge-label" class="hidden"></span>
         </div>
         <!-- Hidden compat container for JS if samBadge is referenced -->
         <div id="sam-badge" style="display: none;"><span class="dot"></span><span id="sam-badge-label"></span></div>
@@ -377,9 +378,9 @@
         <div class="h-9 px-1 flex items-center justify-between border-b border-white/[0.06] pb-2 shrink-0">
           <div class="flex items-center space-x-2">
             <i data-lucide="camera" class="w-4 h-4 text-zinc-400"></i>
-            <span class="text-xs font-semibold text-zinc-200">Optical Surface Feed</span>
+            <span id="defect-feed-source" class="text-xs font-semibold text-zinc-200">CALIBRATED MACRO-NDT OPTICAL BENCHMARK (ASTM A106 WELD)</span>
             <span class="px-2 py-0.5 rounded-md bg-white/[0.04] text-zinc-400 border border-white/5 text-[10px] font-mono">640x480 RAW</span>
-            <span class="hidden" id="capture-device-tag">Optical Sensor</span>
+            <span class="hidden" id="capture-device-tag">CALIBRATED MACRO-NDT OPTICAL BENCHMARK (ASTM A106 WELD)</span>
           </div>
 
           <!-- Optical / SAM 2 Mask View Switcher Pill -->
@@ -572,12 +573,12 @@
       <!-- ── COLUMN 3: Card 3 (Timeline) + Card 4 (Actuators & Audit) ───── -->
       <section class="lg:col-span-4 flex flex-col h-full gap-3 overflow-hidden">
 
-        <!-- Card 3: Autonomous Agent Execution (Vertical Process Tracker) -->
+        <!-- Card 3: DETERMINISTIC FSM CONTROL LOOP (LANGGRAPH) (Vertical Process Tracker) -->
         <div class="scada-panel p-3.5 flex flex-col gap-2.5 shrink-0 backdrop-blur-xl" style="background: rgba(18, 24, 38, 0.78) !important; backdrop-filter: blur(14px) !important; -webkit-backdrop-filter: blur(14px) !important; border: 1px solid rgba(148, 163, 184, 0.16) !important; border-radius: 12px !important; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35) !important;">
           <div class="flex items-center justify-between border-b border-white/[0.06] pb-2">
             <div class="flex items-center space-x-2">
               <i data-lucide="git-commit" class="w-4 h-4 text-zinc-400"></i>
-              <span class="text-xs font-semibold text-zinc-200">Autonomous Agent Execution</span>
+              <span class="text-xs font-semibold text-zinc-200">DETERMINISTIC FSM CONTROL LOOP (LANGGRAPH)</span>
             </div>
             <div class="flex items-center space-x-2 text-[10px] font-mono">
               <span id="stream-status" class="text-zinc-400 uppercase font-semibold">STANDBY</span>
@@ -661,11 +662,11 @@
               <div class="flex items-center space-x-2.5">
                 <div id="actuator-dot-1" class="w-2 h-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50 animate-pulse"></div>
                 <div>
-                  <div class="text-xs font-medium text-zinc-200">Relief Valve PV-12</div>
+                  <div class="text-xs font-medium text-zinc-200">RELIEF VALVE PV-12</div>
                   <div class="text-[10px] font-mono text-zinc-500">Hydraulic Pressure Bypass</div>
                 </div>
               </div>
-              <span id="actuator-status-1" class="px-2 py-0.5 rounded-lg text-[10px] font-mono font-semibold bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">THROTTLED -35%</span>
+              <span id="actuator-status-1" class="px-2 py-0.5 rounded-lg text-[10px] font-mono font-semibold bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">[THROTTLED -35%]</span>
             </div>
 
             <!-- Card 2: Sector Flange Interlock -->
@@ -673,23 +674,23 @@
               <div class="flex items-center space-x-2.5">
                 <div id="actuator-dot-2" class="w-2 h-2 rounded-full bg-amber-400 shadow-sm shadow-amber-400/50"></div>
                 <div>
-                  <div class="text-xs font-medium text-zinc-200">Sector Flange Interlock</div>
+                  <div class="text-xs font-medium text-zinc-200">SECTOR FLANGE</div>
                   <div class="text-[10px] font-mono text-zinc-500">Structural Stress Barrier</div>
                 </div>
               </div>
-              <span id="actuator-status-2" class="px-2 py-0.5 rounded-lg text-[10px] font-mono font-semibold bg-amber-500/10 border border-amber-500/20 text-amber-300">ISOLATED & SEALED</span>
+              <span id="actuator-status-2" class="px-2 py-0.5 rounded-lg text-[10px] font-mono font-semibold bg-amber-500/10 border border-amber-500/20 text-amber-300">[ISOLATED & SEALED]</span>
             </div>
 
-            <!-- Card 3: Drone IR Inspection (DJI-Mavic3) -->
+            <!-- Card 3: Drone IR Recon -->
             <div id="actuator-card-3" class="px-3 py-1.5 rounded-xl bg-white/[0.025] border border-white/[0.06] flex items-center justify-between transition-all duration-300">
               <div class="flex items-center space-x-2.5">
                 <div id="actuator-dot-3" class="w-2 h-2 rounded-full bg-sky-400 shadow-sm shadow-sky-400/50"></div>
                 <div>
-                  <div class="text-xs font-medium text-zinc-200">Drone IR Inspection (DJI-Mavic3)</div>
-                  <div class="text-[10px] font-mono text-zinc-500">Autonomous Optical Telemetry</div>
+                  <div class="text-xs font-medium text-zinc-200">DRONE IR RECON</div>
+                  <div class="text-[10px] font-mono text-zinc-500">Optical Telemetry Bus</div>
                 </div>
               </div>
-              <span id="actuator-status-3" class="px-2 py-0.5 rounded-lg text-[10px] font-mono font-semibold bg-sky-500/10 border border-sky-500/20 text-sky-300">AIRBORNE ON TARGET</span>
+              <span id="actuator-status-3" class="px-2 py-0.5 rounded-lg text-[10px] font-mono font-semibold bg-sky-500/10 border border-sky-500/20 text-sky-300">[AIRBORNE]</span>
             </div>
           </div>
 
@@ -1502,7 +1503,7 @@
     };
 
     // Scenario Selection
-    function selectScenario(scId) {
+    async function selectScenario(scId) {
       currentScenario = scId;
       playBeep(450, 0.05);
       setExecutiveBanner('default');
@@ -1515,12 +1516,70 @@
       };
       if (scenarioImageMap[scId]) {
         rawImageUrl = scenarioImageMap[scId];
-        if (currentVisionMode === 'raw' || !currentEventSource) {
-          const mainImg = document.getElementById('inspection-img');
-          if (mainImg) mainImg.src = rawImageUrl;
+        maskImageUrl = scenarioImageMap[scId];
+      }
+
+      // Immediately synchronize inspection viewport and passive image
+      const mainImg = document.getElementById('inspection-img');
+      if (mainImg) mainImg.src = rawImageUrl;
+      const passiveImg = document.getElementById('passive-img');
+      if (passiveImg) passiveImg.src = rawImageUrl;
+
+      // Reset defect overlay tag & stat metrics for new scenario
+      const defectTag = document.getElementById('defect-tag');
+      if (defectTag) defectTag.classList.add('hidden');
+      const statDefectCount = document.getElementById('stat-defect-count');
+      if (statDefectCount) statDefectCount.textContent = '0';
+      const statDefectArea = document.getElementById('stat-defect-area');
+      if (statDefectArea) statDefectArea.textContent = '0.00%';
+
+      // Reset view switcher button states to Raw Optical
+      currentVisionMode = 'raw';
+      const btnRaw = document.getElementById('btn-view-raw');
+      const btnSam = document.getElementById('btn-view-sam');
+      if (btnRaw) btnRaw.className = "px-2.5 py-1 rounded-md bg-cyan-600 text-white font-semibold shadow";
+      if (btnSam) btnSam.className = "px-2.5 py-1 rounded-md text-slate-400 hover:text-white transition";
+
+      // Dispatch /api/select-scenario?id=SC-00X without hardcoded halts
+      try {
+        console.log(`[CAN-BUS] Dispatching scenario frame: ${scId} -> /api/select-scenario?id=${scId}`);
+        const res = await fetch(`/api/select-scenario?id=${encodeURIComponent(scId)}`);
+        if (res.ok) {
+          const payload = await res.json();
+          console.log(`[CAN-BUS] Ingesting telemetry frame 0x4F for scenario ${scId}:`, payload.sensors || payload);
+          if (payload.image_url) {
+            rawImageUrl = payload.image_url;
+            maskImageUrl = payload.image_url;
+            if (mainImg) mainImg.src = rawImageUrl;
+            if (passiveImg) passiveImg.src = rawImageUrl;
+          }
+          if (payload.sensors) {
+            updateSensors(payload.sensors);
+            if (telemetryChart) {
+              const bar = +(payload.sensors.pressure_psi * 0.0689476).toFixed(2);
+              const strain = +payload.sensors.strain_microstrain.toFixed(1);
+              const vib = +payload.sensors.vibration_rms_mm_s.toFixed(2);
+              const pctBar = Math.min(100, Math.round((bar / 6.0) * 100));
+              const pctStrain = Math.min(100, Math.round((strain / 350) * 100));
+              const pctVib = Math.min(100, Math.round((vib / 7.1) * 100));
+              telemetryChart.data.labels = ['Baseline (T0)'];
+              telemetryChart.data.datasets[0].data = [pctBar];
+              telemetryChart.data.datasets[1].data = [pctStrain];
+              telemetryChart.data.datasets[2].data = [pctVib];
+              telemetryChart.update();
+            }
+          }
+          if (payload.asset_id) {
+            const assetTicker = document.getElementById('asset-id-ticker');
+            if (assetTicker) assetTicker.textContent = payload.asset_id;
+            const targetZone = document.getElementById('target-zone-label');
+            if (targetZone) targetZone.textContent = `[${payload.asset_id}]`;
+            const hitlAsset = document.getElementById('hitl-asset');
+            if (hitlAsset) hitlAsset.textContent = payload.asset_id;
+          }
         }
-        const passiveImg = document.getElementById('passive-img');
-        if (passiveImg) passiveImg.src = rawImageUrl;
+      } catch (err) {
+        console.warn(`[CAN-BUS] Scenario selection fetch warning:`, err);
       }
 
       document.querySelectorAll('.scenario-btn').forEach(btn => {
@@ -1532,7 +1591,7 @@
         activeBtn.classList.add('ring-2', 'ring-white', 'scale-105');
       }
 
-      logTerminal(`> Scenario selected: [${scId}] — Ready for closed-loop trigger.`);
+      logTerminal(`> Scenario selected: [${scId}] — Telemetry stream dynamically synchronized.`);
     }
 
     // Vision Layer Toggle
@@ -1692,6 +1751,7 @@
 
       currentEventSource.addEventListener('ingest', (e) => {
         const data = JSON.parse(e.data);
+        console.log('[CAN-BUS] Ingesting telemetry frame 0x4F...', data.sensors);
         setNodeStatus('ingest', 'done');
         setNodeStatus('segment', 'active');
         playBeep(520, 0.08);
@@ -1794,16 +1854,31 @@
         document.getElementById('stream-status').textContent = 'SPATIAL REASONING';
         
         // Muse badge: Dynamically render based on llm_provider
+        const badgeReasoning = document.getElementById('badge-reasoning');
         const museBadge = document.getElementById('muse-badge');
         const museLabel = document.getElementById('muse-badge-label');
-        if (museBadge) {
-          museBadge.className = "badge-meta-border flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-mono shadow-sm";
+        if (data.llm_provider === 'baseten') {
+          if (badgeReasoning) {
+            badgeReasoning.className = "badge-meta flex items-center space-x-1.5 text-emerald-400 font-medium";
+            badgeReasoning.innerHTML = "<span class='text-emerald-400 animate-pulse text-xs leading-none inline-block drop-shadow-[0_0_6px_rgba(52,211,153,0.9)]'>●</span> REASONING: Meta Muse Spark Open (Baseten Live)";
+          }
           if (museLabel) {
-            if (data.llm_provider === 'baseten') {
-              museLabel.innerHTML = "<span class='badge-meta flex items-center space-x-1.5 text-emerald-400 font-medium'><span class='text-emerald-400 animate-pulse text-xs leading-none inline-block drop-shadow-[0_0_6px_rgba(52,211,153,0.9)]'>●</span> REASONING: Meta Muse Spark Open (Baseten Live)</span>";
-            } else {
-              museLabel.innerHTML = "<span class='badge-meta' style='color: #fbbf24; text-shadow: 0 0 8px rgba(245, 158, 11, 0.4);'>● REASONING: Local Rule-Based Engine (Fallback Mode)</span>";
-            }
+            museLabel.innerHTML = "<span class='badge-meta flex items-center space-x-1.5 text-emerald-400 font-medium'><span class='text-emerald-400 animate-pulse text-xs leading-none inline-block drop-shadow-[0_0_6px_rgba(52,211,153,0.9)]'>●</span> REASONING: Meta Muse Spark Open (Baseten Live)</span>";
+          }
+          if (museBadge) {
+            museBadge.className = "badge-meta-border flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-mono shadow-sm border border-emerald-500/40";
+          }
+        } else {
+          // Amber only on genuine network failure or offline mock
+          if (badgeReasoning) {
+            badgeReasoning.className = "badge-meta flex items-center space-x-1.5 text-amber-400 font-medium";
+            badgeReasoning.innerHTML = "<span style='color: #fbbf24; text-shadow: 0 0 8px rgba(245, 158, 11, 0.4);'>● REASONING: Local Rule-Based Engine (Fallback Mode)</span>";
+          }
+          if (museLabel) {
+            museLabel.innerHTML = "<span class='badge-meta' style='color: #fbbf24; text-shadow: 0 0 8px rgba(245, 158, 11, 0.4);'>● REASONING: Local Rule-Based Engine (Fallback Mode)</span>";
+          }
+          if (museBadge) {
+            museBadge.className = "badge-meta-border flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-mono shadow-sm border border-amber-500/40";
           }
         }
 
@@ -1862,19 +1937,20 @@
 
         if (card1 && status1) {
           card1.classList.add('ring-1', 'ring-emerald-400', 'bg-emerald-500/10');
-          status1.textContent = 'THROTTLED -35%';
+          status1.textContent = '[THROTTLED -35%]';
           status1.className = 'px-2.5 py-0.5 rounded-lg text-[10px] font-mono font-semibold bg-emerald-500/20 border border-emerald-500/30 text-emerald-300';
         }
         if (card2 && status2) {
           card2.classList.add('ring-1', 'ring-amber-400', 'bg-amber-500/10');
-          status2.textContent = 'ISOLATED & SEALED';
+          status2.textContent = '[ISOLATED & SEALED]';
           status2.className = 'px-2.5 py-0.5 rounded-lg text-[10px] font-mono font-semibold bg-amber-500/20 border border-amber-500/30 text-amber-300';
         }
         if (card3 && status3) {
           card3.classList.add('ring-1', 'ring-sky-400', 'bg-sky-500/10');
-          status3.textContent = 'AIRBORNE ON TARGET';
+          status3.textContent = '[AIRBORNE]';
           status3.className = 'px-2.5 py-0.5 rounded-lg text-[10px] font-mono font-semibold bg-sky-500/20 border border-sky-500/30 text-sky-300';
         }
+        console.log('[CAN-BUS] Actuator countermeasure dispatch frame 0x8C acknowledged.');
 
         const container = document.getElementById('actions-container');
         if (container) {
@@ -1980,6 +2056,19 @@
 
       currentEventSource.onerror = (err) => {
         clearInterval(stopwatchInterval);
+        const badgeReasoning = document.getElementById('badge-reasoning');
+        const museBadge = document.getElementById('muse-badge');
+        const museLabel = document.getElementById('muse-badge-label');
+        if (badgeReasoning) {
+          badgeReasoning.className = "badge-meta flex items-center space-x-1.5 text-amber-400 font-medium";
+          badgeReasoning.innerHTML = "<span style='color: #fbbf24; text-shadow: 0 0 8px rgba(245, 158, 11, 0.4);'>● REASONING: Network Disconnected (Telemetry Bus Degraded)</span>";
+        }
+        if (museLabel) {
+          museLabel.innerHTML = "<span class='badge-meta' style='color: #fbbf24; text-shadow: 0 0 8px rgba(245, 158, 11, 0.4);'>● REASONING: Network Disconnected (Telemetry Bus Degraded)</span>";
+        }
+        if (museBadge) {
+          museBadge.className = "badge-meta-border flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-mono shadow-sm border border-amber-500/40";
+        }
         const btnRunActive = document.getElementById('btn-run-closed-loop') || document.getElementById('btn-run');
         if (btnRunActive) {
           btnRunActive.disabled = false;
@@ -2478,7 +2567,7 @@
 
       benchmarkEventSource.addEventListener('benchmark_summary', (e) => {
         const summary = JSON.parse(e.data);
-        console.log('[BENCHMARK SUMMARY]', summary);
+        console.log('[CAN-BUS] Ingesting benchmark comparative evaluation payload:', summary);
       });
 
       benchmarkEventSource.addEventListener('complete', () => {
