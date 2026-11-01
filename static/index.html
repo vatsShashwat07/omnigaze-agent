@@ -148,6 +148,27 @@
       box-shadow: 0 0 18px rgba(16, 185, 129, 0.25) !important;
     }
 
+    /* Badge styles for dynamic LLM reasoning state */
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+    .badge-nominal {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      border: 1px solid rgb(16 185 129);
+      border-radius: 0.375rem;
+      background: rgba(16, 185, 129, 0.1);
+    }
+    .badge-bridge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      border: 1px solid rgb(245 158 11);
+      border-radius: 0.375rem;
+      background: rgba(245, 158, 11, 0.1);
+    }
+
     /* Strict Modal & Overlay Rules */
     #hitl-modal.hidden,
     #modal-audit-certificate.hidden {
@@ -306,6 +327,8 @@
             <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
             <span>SYSTEM NOMINAL</span>
           </div>
+          <span class="h-3 w-px bg-white/10 hidden md:inline-block"></span>
+          <span id="top-bar-subtitle" class="top-bar-subtitle hidden md:inline-block text-[11px] font-mono text-zinc-400 tracking-wider">TELEMETRY REPLAY: 50 Hz STREAM | REPLAY LOG: mock_telemetry</span>
         </div>
       </div>
 
@@ -327,10 +350,7 @@
       <div class="flex items-center space-x-2.5">
         <!-- Badge 1: Meta Muse Spark Open (Baseten Live) -->
         <div id="muse-badge" class="badge-meta-border flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-mono shadow-sm border border-emerald-500/40">
-          <span id="badge-reasoning" class="badge-meta flex items-center space-x-1.5 text-emerald-400 font-medium">
-            <span class="text-emerald-400 animate-pulse text-xs leading-none inline-block drop-shadow-[0_0_6px_rgba(52,211,153,0.9)]">●</span>
-            REASONING: Meta Muse Spark Open (Baseten Live)
-          </span>
+          <span id="badge-reasoning" class="badge-nominal text-xs px-2 py-0.5 mono font-semibold border-emerald-500 text-emerald-300">● REASONING: Meta Muse Spark Open (Baseten Live)</span>
           <span id="muse-badge-label" class="hidden"></span>
         </div>
         <!-- Hidden compat container for JS if samBadge is referenced -->
@@ -598,12 +618,12 @@
             </div>
 
             <!-- Node 2: Segment -->
-            <div id="node-segment" class="px-3 py-2 rounded-xl bg-white/[0.015] border border-white/[0.04] text-zinc-500 flex items-center justify-between transition-all duration-200">
+            <div id="agent-step-2" class="px-3 py-2 rounded-xl bg-white/[0.015] border border-white/[0.04] text-zinc-500 flex items-center justify-between transition-all duration-200">
               <div class="flex items-center space-x-2.5">
                 <span class="status-dot w-2 h-2 rounded-full bg-zinc-700"></span>
-                <span class="font-medium text-xs text-zinc-300">2. Meta SAM 2.1 Segmentation</span>
+                <span class="font-medium text-xs text-zinc-300"><span id="agent-step-2-label" class="step-label">Meta SAM 2.1 Segmentation</span></span>
               </div>
-              <span class="node-status-label text-[10px] font-mono text-zinc-500">STANDBY</span>
+              <span id="agent-step-2-status" class="node-status-label status-pill text-[10px] font-mono text-zinc-500">STANDBY</span>
             </div>
 
             <!-- Node 3: Muse Reason -->
@@ -1625,7 +1645,7 @@
 
     // Node Highlighting (Modern Enterprise Process Tracker)
     function setNodeStatus(nodeId, state = 'active') {
-      const el = document.getElementById(`node-${nodeId}`);
+      const el = document.getElementById(nodeId === 'segment' ? 'agent-step-2' : `node-${nodeId}`) || document.getElementById(`node-${nodeId}`);
       if (!el) return;
       const dot = el.querySelector('.status-dot');
       const label = el.querySelector('.node-status-label');
@@ -1656,7 +1676,69 @@
 
     function resetNodes() {
       ['ingest', 'segment', 'reasoning', 'action', 'verify'].forEach(n => setNodeStatus(n, 'idle'));
+      const step2Label = document.getElementById('agent-step-2-label');
+      if (step2Label) step2Label.textContent = "Meta SAM 2.1 Segmentation";
+      const step2Status = document.getElementById('agent-step-2-status');
+      if (step2Status) {
+        step2Status.textContent = "STANDBY";
+        step2Status.className = "node-status-label status-pill text-[10px] font-mono text-zinc-500";
+      }
     }
+
+    // Dynamic Reasoning Badge Mapping
+    function updateReasoningBadge(provider) {
+      const badgeReasoning = document.getElementById('badge-reasoning');
+      if (badgeReasoning) {
+        if (provider === 'baseten') {
+          badgeReasoning.innerHTML = "● REASONING: Meta Muse Spark Open (Baseten Live)";
+          badgeReasoning.className = "badge-nominal text-xs px-2 py-0.5 mono font-semibold border-emerald-500 text-emerald-300";
+        } else {
+          badgeReasoning.innerHTML = "● REASONING: Local Rule Engine (Fallback Mode)";
+          badgeReasoning.className = "badge-bridge text-xs px-2 py-0.5 mono font-semibold border-amber-500 text-amber-300";
+        }
+      }
+      const museBadge = document.getElementById('muse-badge');
+      if (museBadge) {
+        museBadge.className = provider === 'baseten'
+          ? "badge-meta-border flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-mono shadow-sm border border-emerald-500/40"
+          : "badge-meta-border flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-mono shadow-sm border border-amber-500/40";
+      }
+      const museLabel = document.getElementById('muse-badge-label');
+      if (museLabel) {
+        museLabel.innerHTML = provider === 'baseten'
+          ? "<span class='badge-meta flex items-center space-x-1.5 text-emerald-400 font-medium'><span class='text-emerald-400 animate-pulse text-xs leading-none inline-block drop-shadow-[0_0_6px_rgba(52,211,153,0.9)]'>●</span> REASONING: Meta Muse Spark Open (Baseten Live)</span>"
+          : "<span class='badge-meta' style='color: #fbbf24; text-shadow: 0 0 8px rgba(245, 158, 11, 0.4);'>● REASONING: Local Rule Engine (Fallback Mode)</span>";
+      }
+    }
+    window.updateReasoningBadge = updateReasoningBadge;
+
+    // Dynamic Vision Step Mapping
+    function updateVisionStep(backend) {
+      const step2 = document.getElementById('agent-step-2') || document.getElementById('node-segment');
+      if (!step2) return;
+      const labelEl = step2.querySelector('#agent-step-2-label') || step2.querySelector('.step-label') || step2.querySelector('.font-medium');
+      const statusPill = step2.querySelector('#agent-step-2-status') || step2.querySelector('.status-pill') || step2.querySelector('.node-status-label');
+      const dot = step2.querySelector('.status-dot');
+
+      if (backend === 'sam2') {
+        if (labelEl) labelEl.textContent = "Meta SAM 2.1 Segmentation";
+        if (statusPill) {
+          statusPill.textContent = "Verified";
+          statusPill.className = "node-status-label status-pill text-[10px] font-mono tracking-wider text-emerald-400 font-semibold";
+        }
+        if (dot) dot.className = "status-dot w-2 h-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400";
+        step2.className = "px-3 py-2 rounded-2xl bg-white/[0.03] border border-emerald-500/30 text-zinc-200 flex items-center justify-between transition-all duration-300";
+      } else if (backend === 'classical-fallback') {
+        if (labelEl) labelEl.textContent = "OpenCV NDT Segmenter (Calibrated Fallback)";
+        if (statusPill) {
+          statusPill.textContent = "Fallback Active";
+          statusPill.className = "node-status-label status-pill text-[10px] font-mono tracking-wider text-amber-400 font-semibold";
+        }
+        if (dot) dot.className = "status-dot w-2 h-2 rounded-full bg-amber-400 shadow-sm shadow-amber-400";
+        step2.className = "px-3 py-2 rounded-2xl bg-white/[0.03] border border-amber-500/30 text-zinc-200 flex items-center justify-between transition-all duration-300";
+      }
+    }
+    window.updateVisionStep = updateVisionStep;
 
     // Main Trigger: Starts SSE Streaming
     function triggerInspection() {
@@ -1713,6 +1795,19 @@
       // Connect EventSource to FastAPI SSE endpoint
       const streamUrl = `/api/stream/${currentScenario}?provider=baseten`;
       currentEventSource = new EventSource(streamUrl);
+
+      // SSE onmessage handler for dynamic reasoning badge and vision step mapping
+      currentEventSource.onmessage = (e) => {
+        try {
+          const data = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
+          if (data && data.llm_provider !== undefined) {
+            updateReasoningBadge(data.llm_provider);
+          }
+          if (data && (data.segmentation_backend !== undefined || data.backend !== undefined)) {
+            updateVisionStep(data.segmentation_backend || data.backend);
+          }
+        } catch (err) {}
+      };
 
       // Cryptographic Audit Block SSE Event Listener
       currentEventSource.addEventListener('audit_block', (e) => {
@@ -1801,6 +1896,9 @@
         setNodeStatus('reasoning', 'active');
         playBeep(640, 0.08);
 
+        // Dynamic Vision Step Mapping
+        updateVisionStep(data.segmentation_backend || data.backend);
+
         document.getElementById('stream-status').textContent = 'DEFECT SEGMENTED';
         document.getElementById('stat-defect-count').textContent = data.defect_count;
         document.getElementById('stat-defect-area').textContent = data.total_defect_area_pct.toFixed(2) + '%';
@@ -1853,34 +1951,8 @@
 
         document.getElementById('stream-status').textContent = 'SPATIAL REASONING';
         
-        // Muse badge: Dynamically render based on llm_provider
-        const badgeReasoning = document.getElementById('badge-reasoning');
-        const museBadge = document.getElementById('muse-badge');
-        const museLabel = document.getElementById('muse-badge-label');
-        if (data.llm_provider === 'baseten') {
-          if (badgeReasoning) {
-            badgeReasoning.className = "badge-meta flex items-center space-x-1.5 text-emerald-400 font-medium";
-            badgeReasoning.innerHTML = "<span class='text-emerald-400 animate-pulse text-xs leading-none inline-block drop-shadow-[0_0_6px_rgba(52,211,153,0.9)]'>●</span> REASONING: Meta Muse Spark Open (Baseten Live)";
-          }
-          if (museLabel) {
-            museLabel.innerHTML = "<span class='badge-meta flex items-center space-x-1.5 text-emerald-400 font-medium'><span class='text-emerald-400 animate-pulse text-xs leading-none inline-block drop-shadow-[0_0_6px_rgba(52,211,153,0.9)]'>●</span> REASONING: Meta Muse Spark Open (Baseten Live)</span>";
-          }
-          if (museBadge) {
-            museBadge.className = "badge-meta-border flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-mono shadow-sm border border-emerald-500/40";
-          }
-        } else {
-          // Amber only on genuine network failure or offline mock
-          if (badgeReasoning) {
-            badgeReasoning.className = "badge-meta flex items-center space-x-1.5 text-amber-400 font-medium";
-            badgeReasoning.innerHTML = "<span style='color: #fbbf24; text-shadow: 0 0 8px rgba(245, 158, 11, 0.4);'>● REASONING: Local Rule-Based Engine (Fallback Mode)</span>";
-          }
-          if (museLabel) {
-            museLabel.innerHTML = "<span class='badge-meta' style='color: #fbbf24; text-shadow: 0 0 8px rgba(245, 158, 11, 0.4);'>● REASONING: Local Rule-Based Engine (Fallback Mode)</span>";
-          }
-          if (museBadge) {
-            museBadge.className = "badge-meta-border flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-mono shadow-sm border border-amber-500/40";
-          }
-        }
+        // Dynamic Reasoning Badge Mapping
+        updateReasoningBadge(data.llm_provider);
 
         // Severity badge
         const sevEl = document.getElementById('severity-badge');
@@ -2060,11 +2132,11 @@
         const museBadge = document.getElementById('muse-badge');
         const museLabel = document.getElementById('muse-badge-label');
         if (badgeReasoning) {
-          badgeReasoning.className = "badge-meta flex items-center space-x-1.5 text-amber-400 font-medium";
-          badgeReasoning.innerHTML = "<span style='color: #fbbf24; text-shadow: 0 0 8px rgba(245, 158, 11, 0.4);'>● REASONING: Network Disconnected (Telemetry Bus Degraded)</span>";
+          badgeReasoning.innerHTML = "● REASONING: Local Rule Engine (Fallback Mode)";
+          badgeReasoning.className = "badge-bridge text-xs px-2 py-0.5 mono font-semibold border-amber-500 text-amber-300";
         }
         if (museLabel) {
-          museLabel.innerHTML = "<span class='badge-meta' style='color: #fbbf24; text-shadow: 0 0 8px rgba(245, 158, 11, 0.4);'>● REASONING: Network Disconnected (Telemetry Bus Degraded)</span>";
+          museLabel.innerHTML = "<span class='badge-meta' style='color: #fbbf24; text-shadow: 0 0 8px rgba(245, 158, 11, 0.4);'>● REASONING: Local Rule Engine (Fallback Mode)</span>";
         }
         if (museBadge) {
           museBadge.className = "badge-meta-border flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-mono shadow-sm border border-amber-500/40";
