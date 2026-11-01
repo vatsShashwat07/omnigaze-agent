@@ -1,9 +1,9 @@
 {
   "inspection_id": "SC-004",
   "scenario": "SC-004",
-  "timestamp": "2026-11-01T20:22:41.277392+00:00",
+  "timestamp": "2026-11-01T21:27:14.280870+00:00",
   "asset": {
-    "id": "STRUCTURE-INFRA-SC-004 (simulated)",
+    "id": "STRUCTURE-INFRA-SC-004 (DIGITAL TWIN REPLAY)",
     "type": "welded_structural_steel_joint",
     "condition": "stubborn_propagating_fatigue_crack",
     "location": {

@@ -1075,7 +1075,7 @@
         </div>
         <div class="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex justify-between items-center">
           <span class="text-zinc-500">TARGET ASSET</span>
-          <span id="hitl-target-asset" class="font-semibold text-white">SEC-FLANGE-409 (DIGITAL TWIN ASSET)</span>
+          <span id="hitl-target-asset" class="font-semibold text-white">STRUCTURE-INFRA-SC-004 (DIGITAL TWIN REPLAY)</span>
         </div>
         <div class="p-3 rounded-xl bg-white/[0.02] border border-white/5 flex justify-between items-center">
           <span class="text-zinc-500">REASONING SOURCE</span>
@@ -2163,7 +2163,12 @@
     // ── HITL Safety Interlock Modal Logic ──────────────────────────────
     function showApprovalModal(data) {
       const targetEl = document.getElementById('hitl-target-asset');
-      if (targetEl) targetEl.textContent = data.target || '--';
+      if (targetEl) {
+        let t = data.target || 'STRUCTURE-INFRA-SC-004 (DIGITAL TWIN REPLAY)';
+        t = t.replace(/STRUCTURE-INFRA-SC-004\s*\(simulated\)/gi, 'STRUCTURE-INFRA-SC-004 (DIGITAL TWIN REPLAY)')
+             .replace(/\(simulated\)/gi, '(DIGITAL TWIN REPLAY)');
+        targetEl.textContent = t;
+      }
       const actEl = document.getElementById('hitl-action-name');
       if (actEl) actEl.textContent = data.action || 'emergency_lockdown';
       const riskEl = document.getElementById('hitl-risk-level');
@@ -2666,8 +2671,8 @@
           const ledger = await res.json();
           const run = (ledger && ledger.runs && ledger.runs[runId]) ? ledger.runs[runId] : null;
           exportData = {
-            certificate_title: "CRYPTOGRAPHIC AUDIT CERTIFICATE (ISO-10816 COMPLIANT)",
-            standard: "ISO-10816-3 CLASS IV · ASME B31.3 · API 579-1",
+            certificate_title: "TAMPER-EVIDENT INSPECTION AUDIT RECORD (SHA-256 HASH CHAIN)",
+            standard: "ISO-10816-3 CLASS IV (Vibration) · ASME B31.3 (Piping)",
             run_id: runId,
             merkle_root_hash: "25724c8901ad...e91d",
             merkle_root_full: (run && run.merkle_root) ? run.merkle_root : "25724c8901ad42ff7b5a8e0f9b6c1234567890abcdef1234567890abcde91d",
@@ -2697,8 +2702,8 @@
 
       if (!exportData) {
         exportData = {
-          certificate_title: "CRYPTOGRAPHIC AUDIT CERTIFICATE (ISO-10816 COMPLIANT)",
-          standard: "ISO-10816-3 CLASS IV · ASME B31.3 · API 579-1",
+          certificate_title: "TAMPER-EVIDENT INSPECTION AUDIT RECORD (SHA-256 HASH CHAIN)",
+          standard: "ISO-10816-3 CLASS IV (Vibration) · ASME B31.3 (Piping)",
           run_id: runId,
           merkle_root_hash: "25724c8901ad...e91d",
           merkle_root_full: "25724c8901ad42ff7b5a8e0f9b6c1234567890abcdef1234567890abcde91d",

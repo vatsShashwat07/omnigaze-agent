@@ -57,7 +57,7 @@ REAL_ASSET_MAP: dict[str, dict[str, Any]] = {
     },
     "SC-004": {
         "rel_path": "mock_telemetry/real_assets/weld_joint_fatigue_crack.png",
-        "asset_id": "STRUCTURE-INFRA-SC-004 (simulated)",
+        "asset_id": "STRUCTURE-INFRA-SC-004 (DIGITAL TWIN REPLAY)",
         "asset_type": "welded_structural_steel_joint",
         "condition": "stubborn_propagating_fatigue_crack",
         "resolution": "1200x896",

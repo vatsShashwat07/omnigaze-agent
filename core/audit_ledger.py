@@ -492,10 +492,10 @@ def generate_certificate_html(run_data: Dict[str, Any]) -> str:
             OmniGaze Cyber-Physical Autonomous Agent System
           </div>
           <h1 class="text-xl md:text-2xl font-extrabold text-white tracking-tight mt-0.5">
-            FORENSIC STRUCTURAL HEALTH & MITIGATION CERTIFICATE
+            TAMPER-EVIDENT INSPECTION AUDIT RECORD (SHA-256 HASH CHAIN)
           </h1>
           <p class="text-xs text-slate-400 font-mono mt-0.5">
-            Tamper-Evident Cyber-Physical Closed-Loop Inspection Record
+            ISO-10816-3 CLASS IV (Vibration) · ASME B31.3 (Piping)
           </p>
         </div>
       </div>
@@ -693,6 +693,7 @@ def generate_certificate_html(run_data: Dict[str, Any]) -> str:
       <div class="md:col-span-7 space-y-2">
         <div class="text-[10px] font-mono text-slate-400 uppercase font-bold">Applicable Industrial Standards Compliance:</div>
         <div class="flex flex-wrap gap-1.5 font-mono text-[10px]">
+          <span class="px-2 py-0.5 rounded bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 font-semibold">ISO-10816-3 CLASS IV (Vibration) · ASME B31.3 (Piping)</span>
           <span class="px-2 py-0.5 rounded bg-slate-900 border border-slate-700 text-slate-300">ISO 55000:2014</span>
           <span class="px-2 py-0.5 rounded bg-slate-900 border border-slate-700 text-slate-300">ISO 13849-1 (Cat 4 PL e)</span>
           <span class="px-2 py-0.5 rounded bg-slate-900 border border-slate-700 text-slate-300">IEC 62443-3-3</span>

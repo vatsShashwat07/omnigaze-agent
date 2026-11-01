@@ -1,7 +1,7 @@
 {
   "version": "1.0-sha256",
-  "updated_at": "2026-11-01T20:09:17.620153+00:00",
-  "latest_run_id": "RUN-SC-003-e3ff218a",
+  "updated_at": "2026-11-01T21:28:55.047544+00:00",
+  "latest_run_id": "RUN-SC-004-1d6d7650",
   "runs": {
     "TEST-RUN-001": {
       "run_id": "TEST-RUN-001",
@@ -26253,6 +26253,876 @@
         "defect_backend": "classical-fallback",
         "stability_passed": true,
         "elapsed_seconds": 7.57
+      }
+    },
+    "RUN-SC-003-1dbaf07d": {
+      "run_id": "RUN-SC-003-1dbaf07d",
+      "scenario": "SC-003",
+      "asset_id": "STRUCTURE-INFRA-SC-003 (simulated)",
+      "created_at": "2026-11-01T21:24:01.887878+00:00",
+      "completed_at": "2026-11-01T21:24:14.060361+00:00",
+      "blocks": [
+        {
+          "block_index": 0,
+          "run_id": "RUN-SC-003-1dbaf07d",
+          "step_name": "INGEST",
+          "timestamp_utc": "2026-11-01T21:24:01.887878+00:00",
+          "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "block_hash": "0a60431e880ba2eac9d1c7eeeeac13a0cd39127f411bd0617588677e492737a6",
+          "payload_hash": "c774764b4bce26066089770c83a390f5d971fccb7702fa083f9a70cc50d6d3dc",
+          "short_hash": "0a6043...37a6",
+          "data_summary": {
+            "sensors": {
+              "pressure_psi": 38.0,
+              "strain_microstrain": 72.0,
+              "vibration_rms_mm_s": 1.15,
+              "temperature_c": 22.4,
+              "humidity_pct": 51.0,
+              "acoustic_emission_db": 28.0
+            }
+          }
+        },
+        {
+          "block_index": 1,
+          "run_id": "RUN-SC-003-1dbaf07d",
+          "step_name": "SAM_SEGMENTATION",
+          "timestamp_utc": "2026-11-01T21:24:02.941337+00:00",
+          "prev_hash": "0a60431e880ba2eac9d1c7eeeeac13a0cd39127f411bd0617588677e492737a6",
+          "block_hash": "9adc46885288765cee8b47dff40d674820da0aa0139f56aacb95ac70d4f2627d",
+          "payload_hash": "f1be347730c3550761abce9e3916a70ad75dfcf7d8b7bf16bc460fa54645fd4f",
+          "short_hash": "9adc46...627d",
+          "data_summary": {
+            "defect_count": 0,
+            "total_defect_area_pct": 0.0
+          }
+        },
+        {
+          "block_index": 2,
+          "run_id": "RUN-SC-003-1dbaf07d",
+          "step_name": "MUSE_REASONING",
+          "timestamp_utc": "2026-11-01T21:24:11.881528+00:00",
+          "prev_hash": "9adc46885288765cee8b47dff40d674820da0aa0139f56aacb95ac70d4f2627d",
+          "block_hash": "6269cb010e305400b16a125ede6516f302d3a96153ef77e8cbe0eaa7b1b37f12",
+          "payload_hash": "7cfcd97a8145955c991423583ac46ada1757d172fe37c7fad1c556ea07c47c61",
+          "short_hash": "6269cb...7f12",
+          "data_summary": {
+            "severity": "LOW",
+            "confidence": 0.92
+          }
+        },
+        {
+          "block_index": 3,
+          "run_id": "RUN-SC-003-1dbaf07d",
+          "step_name": "ACTUATOR_DISPATCH",
+          "timestamp_utc": "2026-11-01T21:24:12.644184+00:00",
+          "prev_hash": "6269cb010e305400b16a125ede6516f302d3a96153ef77e8cbe0eaa7b1b37f12",
+          "block_hash": "7bda4d02a1aa7cf144a0f807d854a4ec282cea6f1673324651578d656566fbc1",
+          "payload_hash": "9dfb0f8dbed97f478e780476dc7e1cc25323f912618de01ef530b8ce42231546",
+          "short_hash": "7bda4d...fbc1",
+          "data_summary": {
+            "actions_count": 1
+          }
+        },
+        {
+          "block_index": 4,
+          "run_id": "RUN-SC-003-1dbaf07d",
+          "step_name": "VERIFICATION",
+          "timestamp_utc": "2026-11-01T21:24:13.561533+00:00",
+          "prev_hash": "7bda4d02a1aa7cf144a0f807d854a4ec282cea6f1673324651578d656566fbc1",
+          "block_hash": "df20aa4476564850ecee28c373fc28eb26eaec792d03fa836cbbcb98a09fe2c1",
+          "payload_hash": "2dc9482c07b0052c968e23235a064deb047a066b0cf3d3875fb2930d1e70adc5",
+          "short_hash": "df20aa...e2c1",
+          "data_summary": {
+            "post_sensors": {
+              "vibration_rms_mm_s": 0.32,
+              "strain_microstrain": 27.4,
+              "pressure_psi": 32.0
+            }
+          }
+        },
+        {
+          "block_index": 5,
+          "run_id": "RUN-SC-003-1dbaf07d",
+          "step_name": "PIPELINE_COMPLETE",
+          "timestamp_utc": "2026-11-01T21:24:14.060361+00:00",
+          "prev_hash": "df20aa4476564850ecee28c373fc28eb26eaec792d03fa836cbbcb98a09fe2c1",
+          "block_hash": "a59525a9121aa6104c14f03300291c1b997610cfe1d772245867113cb0bdc606",
+          "payload_hash": "711f1251247ec342cc4419264f86d3a4417c620a32af6f303712cdd3190708d2",
+          "short_hash": "a59525...c606",
+          "data_summary": {
+            "status": "COMPLETED"
+          }
+        }
+      ],
+      "merkle_root": "bd203e86ee754e93735b04b5c9cc076720b22ed09d17af74879b67a2c0e33051",
+      "final_hash": "a59525a9121aa6104c14f03300291c1b997610cfe1d772245867113cb0bdc606",
+      "compliance_tags": [
+        "ISO 55000:2014 (Asset Management Lifecycle)",
+        "ISO 13849-1:2023 (Safety-Related Control Systems - Cat 4 PL e)",
+        "IEC 62443-3-3:2018 (Industrial Network & System Security)",
+        "NIST SP 800-82 Rev 2 (Guide to Industrial Control Systems OT Security)"
+      ],
+      "forensic_snapshot": {
+        "asset": {
+          "id": "STRUCTURE-INFRA-SC-003 (simulated)",
+          "type": "reinforced_concrete_beam",
+          "condition": "nominal_baseline_health",
+          "location": {
+            "lat": 37.7749,
+            "lon": -122.4194,
+            "elevation_m": 12.5
+          }
+        },
+        "pre_sensors": {
+          "pressure_psi": 38.0,
+          "strain_microstrain": 72.0,
+          "vibration_rms_mm_s": 1.15,
+          "temperature_c": 22.4,
+          "humidity_pct": 51.0,
+          "acoustic_emission_db": 28.0
+        },
+        "post_sensors": {
+          "vibration_rms_mm_s": 0.32,
+          "strain_microstrain": 27.4,
+          "pressure_psi": 32.0
+        },
+        "defects": [],
+        "reasoning": {
+          "severity": "LOW",
+          "confidence": 0.92,
+          "model": "meta-models/muse-spark-open",
+          "provider": "baseten",
+          "rationale": "Hoop stress 3.28 MPa well below 250 MPa yield with 98.7% margin. Zero defects detected, strain 72\u00b5e, vibration 1.15 mm/s and acoustic emission 28 dB all nominal. Classical-fallback confirms no visual anomalies. Pipe operating safely within elastic limits.",
+          "recommended_actions": [
+            "Continue routine operational monitoring",
+            "Maintain scheduled periodic inspection interval"
+          ],
+          "affected_zone": "None - no defects detected, pipe wall nominal throughout inspected zone"
+        },
+        "actions": [
+          {
+            "action": "log_nominal_condition",
+            "target": "maintenance_db",
+            "parameter": "priority",
+            "value": "routine",
+            "status": "logged",
+            "timestamp": "2026-11-01T21:24:12.643846+00:00"
+          }
+        ],
+        "operator_auth": null,
+        "recovery_confirmed": true,
+        "total_defect_area_pct": 0.0,
+        "defect_backend": "classical-fallback",
+        "stability_passed": true,
+        "elapsed_seconds": 12.54
+      }
+    },
+    "RUN-SC-004-44dda56b": {
+      "run_id": "RUN-SC-004-44dda56b",
+      "scenario": "SC-004",
+      "asset_id": "STRUCTURE-INFRA-SC-004 (simulated)",
+      "created_at": "2026-11-01T21:27:33.901404+00:00",
+      "completed_at": "2026-11-01T21:27:53.527003+00:00",
+      "blocks": [
+        {
+          "block_index": 0,
+          "run_id": "RUN-SC-004-44dda56b",
+          "step_name": "INGEST",
+          "timestamp_utc": "2026-11-01T21:27:33.901404+00:00",
+          "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "block_hash": "741c4d987469159cd1fac80272698c9785bd9dad1361321f6c7573746ae02ca1",
+          "payload_hash": "5dd3df62c65e02f83970ec4eb6572e18ae1295f08d7d1dd7906321d614ae3c7f",
+          "short_hash": "741c4d...2ca1",
+          "data_summary": {
+            "sensors": {
+              "pressure_psi": 76.5,
+              "strain_microstrain": 288.0,
+              "vibration_rms_mm_s": 6.45,
+              "temperature_c": 33.2,
+              "humidity_pct": 72.5,
+              "acoustic_emission_db": 59.5
+            }
+          }
+        },
+        {
+          "block_index": 1,
+          "run_id": "RUN-SC-004-44dda56b",
+          "step_name": "SAM_SEGMENTATION",
+          "timestamp_utc": "2026-11-01T21:27:35.032961+00:00",
+          "prev_hash": "741c4d987469159cd1fac80272698c9785bd9dad1361321f6c7573746ae02ca1",
+          "block_hash": "afe7d4db20907d077e226ed3709e02da9570017ac60af292628064cc7dde95d9",
+          "payload_hash": "038db68197c2e5c7ca54fc6d2d1a81a75c89b6cd154b7bba979dd1f3ad39aede",
+          "short_hash": "afe7d4...95d9",
+          "data_summary": {
+            "defect_count": 8,
+            "total_defect_area_pct": 38.7781
+          }
+        },
+        {
+          "block_index": 2,
+          "run_id": "RUN-SC-004-44dda56b",
+          "step_name": "MUSE_REASONING",
+          "timestamp_utc": "2026-11-01T21:27:49.610288+00:00",
+          "prev_hash": "afe7d4db20907d077e226ed3709e02da9570017ac60af292628064cc7dde95d9",
+          "block_hash": "59c67888928c12881213fc0608cd851ea75db162d8da5a5826d5b9803abe093b",
+          "payload_hash": "a64b30e10131f3eed2a3d342b6c5bc6cfc052b4e128324535c849f53a0870038",
+          "short_hash": "59c678...093b",
+          "data_summary": {
+            "severity": "LOW",
+            "confidence": 0.68
+          }
+        },
+        {
+          "block_index": 3,
+          "run_id": "RUN-SC-004-44dda56b",
+          "step_name": "ACTUATOR_DISPATCH",
+          "timestamp_utc": "2026-11-01T21:27:50.404749+00:00",
+          "prev_hash": "59c67888928c12881213fc0608cd851ea75db162d8da5a5826d5b9803abe093b",
+          "block_hash": "c4a5e1ef2dfe87c1013669c50e9b8e49133a5b820b966a49eda726a753923c6d",
+          "payload_hash": "9e04d37ecb4eca136342c6c7f335a0b5fea0d3334f69666380f0ac378fb7c3b9",
+          "short_hash": "c4a5e1...3c6d",
+          "data_summary": {
+            "actions_count": 1
+          }
+        },
+        {
+          "block_index": 4,
+          "run_id": "RUN-SC-004-44dda56b",
+          "step_name": "VERIFICATION",
+          "timestamp_utc": "2026-11-01T21:27:51.298428+00:00",
+          "prev_hash": "c4a5e1ef2dfe87c1013669c50e9b8e49133a5b820b966a49eda726a753923c6d",
+          "block_hash": "f3aad0b71216051335c943591bca331525ee4cf4a8fbb610e22929ea63f79f6d",
+          "payload_hash": "1ff77ac3cc5fa28e00f143aefb33e5c395b0890fadb518b83db34d50cee12ec4",
+          "short_hash": "f3aad0...9f6d",
+          "data_summary": {
+            "post_sensors": {
+              "vibration_rms_mm_s": 3.65,
+              "strain_microstrain": 175.0,
+              "pressure_psi": 58.0
+            }
+          }
+        },
+        {
+          "block_index": 5,
+          "run_id": "RUN-SC-004-44dda56b",
+          "step_name": "ACTUATOR_DISPATCH",
+          "timestamp_utc": "2026-11-01T21:27:52.109709+00:00",
+          "prev_hash": "f3aad0b71216051335c943591bca331525ee4cf4a8fbb610e22929ea63f79f6d",
+          "block_hash": "cbd600d65389d5bebaffacfc2cc28441e4f06fe8e75a02aff67173f52f57bd6d",
+          "payload_hash": "a6f20273c3c774258d5c2f8bbaf40b3f11fb4d340e1bf14ecbecd1163fc786fc",
+          "short_hash": "cbd600...bd6d",
+          "data_summary": {
+            "actions_count": 1
+          }
+        },
+        {
+          "block_index": 6,
+          "run_id": "RUN-SC-004-44dda56b",
+          "step_name": "VERIFICATION",
+          "timestamp_utc": "2026-11-01T21:27:53.013297+00:00",
+          "prev_hash": "cbd600d65389d5bebaffacfc2cc28441e4f06fe8e75a02aff67173f52f57bd6d",
+          "block_hash": "a0510841c1782fbeee2cb62cec65e489cdefe41b9d57f991d674d191e151934f",
+          "payload_hash": "9c3429d5a3814a001da989024ab3b25e2da1bf42c83e264adab830cc18898edb",
+          "short_hash": "a05108...934f",
+          "data_summary": {
+            "post_sensors": {
+              "vibration_rms_mm_s": 1.81,
+              "strain_microstrain": 109.4,
+              "pressure_psi": 36.7
+            }
+          }
+        },
+        {
+          "block_index": 7,
+          "run_id": "RUN-SC-004-44dda56b",
+          "step_name": "PIPELINE_COMPLETE",
+          "timestamp_utc": "2026-11-01T21:27:53.527003+00:00",
+          "prev_hash": "a0510841c1782fbeee2cb62cec65e489cdefe41b9d57f991d674d191e151934f",
+          "block_hash": "f57642dfa4c5ab807689ad9572099108dc6d334e706e8e946b08078a752a800e",
+          "payload_hash": "2b5f786330b6fd67d27f39f48ac851cea5f0715e22a057d7dc76b0cdea3c8f00",
+          "short_hash": "f57642...800e",
+          "data_summary": {
+            "status": "COMPLETED"
+          }
+        }
+      ],
+      "merkle_root": "4cb4c5995576033818feb83bb5ab78d88cfce98e829991e1cb41ea2dfcbaee44",
+      "final_hash": "f57642dfa4c5ab807689ad9572099108dc6d334e706e8e946b08078a752a800e",
+      "compliance_tags": [
+        "ISO 55000:2014 (Asset Management Lifecycle)",
+        "ISO 13849-1:2023 (Safety-Related Control Systems - Cat 4 PL e)",
+        "IEC 62443-3-3:2018 (Industrial Network & System Security)",
+        "NIST SP 800-82 Rev 2 (Guide to Industrial Control Systems OT Security)"
+      ],
+      "forensic_snapshot": {
+        "asset": {
+          "id": "STRUCTURE-INFRA-SC-004 (simulated)",
+          "type": "welded_structural_steel_joint",
+          "condition": "stubborn_propagating_fatigue_crack",
+          "location": {
+            "lat": 37.7749,
+            "lon": -122.4194,
+            "elevation_m": 12.5
+          }
+        },
+        "pre_sensors": {
+          "pressure_psi": 76.5,
+          "strain_microstrain": 288.0,
+          "vibration_rms_mm_s": 6.45,
+          "temperature_c": 33.2,
+          "humidity_pct": 72.5,
+          "acoustic_emission_db": 59.5
+        },
+        "post_sensors": {
+          "vibration_rms_mm_s": 1.81,
+          "strain_microstrain": 109.4,
+          "pressure_psi": 36.7
+        },
+        "defects": [
+          {
+            "defect_id": "crack-42ddba15",
+            "defect_type": "crack",
+            "bbox_xyxy": [
+              669,
+              710,
+              823,
+              732
+            ],
+            "mask_pixel_count": 2100,
+            "surface_area_pct": 0.1953,
+            "confidence": 0.98,
+            "centroid": [
+              744,
+              720
+            ]
+          },
+          {
+            "defect_id": "crack-6052f108",
+            "defect_type": "crack",
+            "bbox_xyxy": [
+              424,
+              710,
+              545,
+              732
+            ],
+            "mask_pixel_count": 1903,
+            "surface_area_pct": 0.177,
+            "confidence": 0.911,
+            "centroid": [
+              486,
+              720
+            ]
+          },
+          {
+            "defect_id": "crack-e908ca98",
+            "defect_type": "crack",
+            "bbox_xyxy": [
+              555,
+              710,
+              658,
+              732
+            ],
+            "mask_pixel_count": 1616,
+            "surface_area_pct": 0.1503,
+            "confidence": 0.875,
+            "centroid": [
+              604,
+              720
+            ]
+          },
+          {
+            "defect_id": "crack-fb1cef33",
+            "defect_type": "crack",
+            "bbox_xyxy": [
+              651,
+              485,
+              818,
+              636
+            ],
+            "mask_pixel_count": 1493,
+            "surface_area_pct": 0.1389,
+            "confidence": 0.98,
+            "centroid": [
+              730,
+              541
+            ]
+          },
+          {
+            "defect_id": "crack-afb593fb",
+            "defect_type": "crack",
+            "bbox_xyxy": [
+              503,
+              283,
+              566,
+              380
+            ],
+            "mask_pixel_count": 1305,
+            "surface_area_pct": 0.1214,
+            "confidence": 0.885,
+            "centroid": [
+              542,
+              340
+            ]
+          },
+          {
+            "defect_id": "corr-a692b5d4",
+            "defect_type": "corrosion",
+            "bbox_xyxy": [
+              191,
+              0,
+              1128,
+              851
+            ],
+            "mask_pixel_count": 332754,
+            "surface_area_pct": 30.9481,
+            "confidence": 0.96,
+            "centroid": [
+              593,
+              411
+            ]
+          },
+          {
+            "defect_id": "corr-febf3730",
+            "defect_type": "corrosion",
+            "bbox_xyxy": [
+              697,
+              696,
+              1128,
+              896
+            ],
+            "mask_pixel_count": 40227,
+            "surface_area_pct": 3.7414,
+            "confidence": 0.864,
+            "centroid": [
+              932,
+              792
+            ]
+          },
+          {
+            "defect_id": "corr-73f9e7ba",
+            "defect_type": "corrosion",
+            "bbox_xyxy": [
+              60,
+              0,
+              208,
+              202
+            ],
+            "mask_pixel_count": 20946,
+            "surface_area_pct": 1.9481,
+            "confidence": 0.824,
+            "centroid": [
+              145,
+              108
+            ]
+          }
+        ],
+        "reasoning": {
+          "severity": "LOW",
+          "confidence": 0.68,
+          "model": "meta-models/muse-spark-open",
+          "provider": "baseten",
+          "rationale": "Visual corrosion 38.8% from classical-fallback backend is unreliable, likely false positive in high humidity. Sensors show low hoop stress ~6.6 MPa with 97.4% yield margin, well below 250 MPa yield. Strain 288 \u00b5\u03b5 and vibration 6.45 mm/s moderately elevated but not critical. No imminent structural failure indicated.",
+          "recommended_actions": [
+            "Verify actual wall loss with ultrasonic thickness testing, do not rely on fallback vision",
+            "Trend vibration and strain monitoring and schedule routine NDT inspection"
+          ],
+          "affected_zone": "External pipe surface with unverified fallback corrosion indication (~38.8% area)"
+        },
+        "actions": [
+          {
+            "action": "log_nominal_condition",
+            "target": "maintenance_db",
+            "parameter": "priority",
+            "value": "routine",
+            "status": "logged",
+            "timestamp": "2026-11-01T21:27:52.109709+00:00"
+          }
+        ],
+        "operator_auth": null,
+        "recovery_confirmed": true,
+        "total_defect_area_pct": 38.7781,
+        "defect_backend": "classical-fallback",
+        "stability_passed": true,
+        "elapsed_seconds": 19.92
+      }
+    },
+    "RUN-SC-004-1d6d7650": {
+      "run_id": "RUN-SC-004-1d6d7650",
+      "scenario": "SC-004",
+      "asset_id": "STRUCTURE-INFRA-SC-004 (simulated)",
+      "created_at": "2026-11-01T21:28:21.670413+00:00",
+      "completed_at": "2026-11-01T21:28:55.045081+00:00",
+      "blocks": [
+        {
+          "block_index": 0,
+          "run_id": "RUN-SC-004-1d6d7650",
+          "step_name": "INGEST",
+          "timestamp_utc": "2026-11-01T21:28:21.670413+00:00",
+          "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+          "block_hash": "7a122972e0cc80bb7efaf7ac52fb2c65bd0608244ef561c3435308f65a2d8664",
+          "payload_hash": "5dd3df62c65e02f83970ec4eb6572e18ae1295f08d7d1dd7906321d614ae3c7f",
+          "short_hash": "7a1229...8664",
+          "data_summary": {
+            "sensors": {
+              "pressure_psi": 76.5,
+              "strain_microstrain": 288.0,
+              "vibration_rms_mm_s": 6.45,
+              "temperature_c": 33.2,
+              "humidity_pct": 72.5,
+              "acoustic_emission_db": 59.5
+            }
+          }
+        },
+        {
+          "block_index": 1,
+          "run_id": "RUN-SC-004-1d6d7650",
+          "step_name": "SAM_SEGMENTATION",
+          "timestamp_utc": "2026-11-01T21:28:22.792795+00:00",
+          "prev_hash": "7a122972e0cc80bb7efaf7ac52fb2c65bd0608244ef561c3435308f65a2d8664",
+          "block_hash": "d3b4c120153de2cfd524c1215f9ac59f18bb4b1776c00929870e7e648124289b",
+          "payload_hash": "3651a69e0cd7608d4d7e5d934775a39e8435b5f3f3e7cea352fa2efead1f1c6d",
+          "short_hash": "d3b4c1...289b",
+          "data_summary": {
+            "defect_count": 8,
+            "total_defect_area_pct": 38.7781
+          }
+        },
+        {
+          "block_index": 2,
+          "run_id": "RUN-SC-004-1d6d7650",
+          "step_name": "MUSE_REASONING",
+          "timestamp_utc": "2026-11-01T21:28:31.935170+00:00",
+          "prev_hash": "d3b4c120153de2cfd524c1215f9ac59f18bb4b1776c00929870e7e648124289b",
+          "block_hash": "0ef38d1f060b86b3c2e71953e1452e05fe1bf2afcd3bdd4cec57eae0385b1542",
+          "payload_hash": "6127c6cd7f4aa205c91a46eb5fefb4b18f6860d3c1f1d89cc3d8163c38ab8e1f",
+          "short_hash": "0ef38d...1542",
+          "data_summary": {
+            "severity": "CRITICAL",
+            "confidence": 0.88
+          }
+        },
+        {
+          "block_index": 3,
+          "run_id": "RUN-SC-004-1d6d7650",
+          "step_name": "OPERATOR_HITL_AUTH",
+          "timestamp_utc": "2026-11-01T21:28:50.625372+00:00",
+          "prev_hash": "0ef38d1f060b86b3c2e71953e1452e05fe1bf2afcd3bdd4cec57eae0385b1542",
+          "block_hash": "a182c906545894cb58a50bc7ed4740e22682613def9b73752be131af7ecab3aa",
+          "payload_hash": "fd96b6edc89856680946558a270cfb1e425ee99ccc7f4ad204ae4bc1420b4db5",
+          "short_hash": "a182c9...b3aa",
+          "data_summary": {
+            "status": "[AUTHORIZED & EXECUTED]"
+          }
+        },
+        {
+          "block_index": 4,
+          "run_id": "RUN-SC-004-1d6d7650",
+          "step_name": "ACTUATOR_DISPATCH",
+          "timestamp_utc": "2026-11-01T21:28:50.701538+00:00",
+          "prev_hash": "a182c906545894cb58a50bc7ed4740e22682613def9b73752be131af7ecab3aa",
+          "block_hash": "8c9bb0a17780b8563fa480d7b4a59295cac0ccefa7d663ee8b2228413d7f4c6e",
+          "payload_hash": "3df1cb57d59dcd5dbe55b1ba1202e94453e03cbe095800492758d5a63a1625b0",
+          "short_hash": "8c9bb0...4c6e",
+          "data_summary": {
+            "actions_count": 3
+          }
+        },
+        {
+          "block_index": 5,
+          "run_id": "RUN-SC-004-1d6d7650",
+          "step_name": "VERIFICATION",
+          "timestamp_utc": "2026-11-01T21:28:51.600307+00:00",
+          "prev_hash": "8c9bb0a17780b8563fa480d7b4a59295cac0ccefa7d663ee8b2228413d7f4c6e",
+          "block_hash": "c1d9549bd62834430f092cf764acd88bb9363fa07eaf01433720e7f6a73d1443",
+          "payload_hash": "1ff77ac3cc5fa28e00f143aefb33e5c395b0890fadb518b83db34d50cee12ec4",
+          "short_hash": "c1d954...1443",
+          "data_summary": {
+            "post_sensors": {
+              "vibration_rms_mm_s": 3.65,
+              "strain_microstrain": 175.0,
+              "pressure_psi": 58.0
+            }
+          }
+        },
+        {
+          "block_index": 6,
+          "run_id": "RUN-SC-004-1d6d7650",
+          "step_name": "OPERATOR_HITL_AUTH",
+          "timestamp_utc": "2026-11-01T21:28:53.571537+00:00",
+          "prev_hash": "c1d9549bd62834430f092cf764acd88bb9363fa07eaf01433720e7f6a73d1443",
+          "block_hash": "ca5d2a969d0d15e2c550079302a2b7b6d5c94b49ec5d2c6d6d2401fc9596e0c7",
+          "payload_hash": "fd96b6edc89856680946558a270cfb1e425ee99ccc7f4ad204ae4bc1420b4db5",
+          "short_hash": "ca5d2a...e0c7",
+          "data_summary": {
+            "status": "[AUTHORIZED & EXECUTED]"
+          }
+        },
+        {
+          "block_index": 7,
+          "run_id": "RUN-SC-004-1d6d7650",
+          "step_name": "ACTUATOR_DISPATCH",
+          "timestamp_utc": "2026-11-01T21:28:53.651199+00:00",
+          "prev_hash": "ca5d2a969d0d15e2c550079302a2b7b6d5c94b49ec5d2c6d6d2401fc9596e0c7",
+          "block_hash": "1cf7025c125afe76861bdce00ab5bdc2c7952e6900c3f8d89d588a411e07f06e",
+          "payload_hash": "d5601b9fe1216ce60552e032d8324ebee70daa65b51917439625c51e803316e9",
+          "short_hash": "1cf702...f06e",
+          "data_summary": {
+            "actions_count": 3
+          }
+        },
+        {
+          "block_index": 8,
+          "run_id": "RUN-SC-004-1d6d7650",
+          "step_name": "VERIFICATION",
+          "timestamp_utc": "2026-11-01T21:28:54.547505+00:00",
+          "prev_hash": "1cf7025c125afe76861bdce00ab5bdc2c7952e6900c3f8d89d588a411e07f06e",
+          "block_hash": "1efbedac87950c3d44d748f1f33ba33b91c15da49718ca177b5e1a3d5d02b08f",
+          "payload_hash": "9c3429d5a3814a001da989024ab3b25e2da1bf42c83e264adab830cc18898edb",
+          "short_hash": "1efbed...b08f",
+          "data_summary": {
+            "post_sensors": {
+              "vibration_rms_mm_s": 1.81,
+              "strain_microstrain": 109.4,
+              "pressure_psi": 36.7
+            }
+          }
+        },
+        {
+          "block_index": 9,
+          "run_id": "RUN-SC-004-1d6d7650",
+          "step_name": "PIPELINE_COMPLETE",
+          "timestamp_utc": "2026-11-01T21:28:55.045081+00:00",
+          "prev_hash": "1efbedac87950c3d44d748f1f33ba33b91c15da49718ca177b5e1a3d5d02b08f",
+          "block_hash": "38a3c47251c9c2231add64e89127a0e14e5ecc7e76f5d01714a787fa9a8abec2",
+          "payload_hash": "3d9b33b03af08e8a75164187b481df4b336462f7742a55f83e2a8e188d04f4b5",
+          "short_hash": "38a3c4...bec2",
+          "data_summary": {
+            "status": "COMPLETED"
+          }
+        }
+      ],
+      "merkle_root": "faa8c715cd53ce1cf710c1bac717380c1abb2e48dbab88ea302052b4d780ac80",
+      "final_hash": "38a3c47251c9c2231add64e89127a0e14e5ecc7e76f5d01714a787fa9a8abec2",
+      "compliance_tags": [
+        "ISO 55000:2014 (Asset Management Lifecycle)",
+        "ISO 13849-1:2023 (Safety-Related Control Systems - Cat 4 PL e)",
+        "IEC 62443-3-3:2018 (Industrial Network & System Security)",
+        "NIST SP 800-82 Rev 2 (Guide to Industrial Control Systems OT Security)"
+      ],
+      "forensic_snapshot": {
+        "asset": {
+          "id": "STRUCTURE-INFRA-SC-004 (simulated)",
+          "type": "welded_structural_steel_joint",
+          "condition": "stubborn_propagating_fatigue_crack",
+          "location": {
+            "lat": 37.7749,
+            "lon": -122.4194,
+            "elevation_m": 12.5
+          }
+        },
+        "pre_sensors": {
+          "pressure_psi": 76.5,
+          "strain_microstrain": 288.0,
+          "vibration_rms_mm_s": 6.45,
+          "temperature_c": 33.2,
+          "humidity_pct": 72.5,
+          "acoustic_emission_db": 59.5
+        },
+        "post_sensors": {
+          "vibration_rms_mm_s": 1.81,
+          "strain_microstrain": 109.4,
+          "pressure_psi": 36.7
+        },
+        "defects": [
+          {
+            "defect_id": "crack-0c07cfc6",
+            "defect_type": "crack",
+            "bbox_xyxy": [
+              669,
+              710,
+              823,
+              732
+            ],
+            "mask_pixel_count": 2100,
+            "surface_area_pct": 0.1953,
+            "confidence": 0.98,
+            "centroid": [
+              744,
+              720
+            ]
+          },
+          {
+            "defect_id": "crack-6d02e8ce",
+            "defect_type": "crack",
+            "bbox_xyxy": [
+              424,
+              710,
+              545,
+              732
+            ],
+            "mask_pixel_count": 1903,
+            "surface_area_pct": 0.177,
+            "confidence": 0.911,
+            "centroid": [
+              486,
+              720
+            ]
+          },
+          {
+            "defect_id": "crack-753e1144",
+            "defect_type": "crack",
+            "bbox_xyxy": [
+              555,
+              710,
+              658,
+              732
+            ],
+            "mask_pixel_count": 1616,
+            "surface_area_pct": 0.1503,
+            "confidence": 0.875,
+            "centroid": [
+              604,
+              720
+            ]
+          },
+          {
+            "defect_id": "crack-e723cc21",
+            "defect_type": "crack",
+            "bbox_xyxy": [
+              651,
+              485,
+              818,
+              636
+            ],
+            "mask_pixel_count": 1493,
+            "surface_area_pct": 0.1389,
+            "confidence": 0.98,
+            "centroid": [
+              730,
+              541
+            ]
+          },
+          {
+            "defect_id": "crack-637ffae0",
+            "defect_type": "crack",
+            "bbox_xyxy": [
+              503,
+              283,
+              566,
+              380
+            ],
+            "mask_pixel_count": 1305,
+            "surface_area_pct": 0.1214,
+            "confidence": 0.885,
+            "centroid": [
+              542,
+              340
+            ]
+          },
+          {
+            "defect_id": "corr-9c8443e2",
+            "defect_type": "corrosion",
+            "bbox_xyxy": [
+              191,
+              0,
+              1128,
+              851
+            ],
+            "mask_pixel_count": 332754,
+            "surface_area_pct": 30.9481,
+            "confidence": 0.96,
+            "centroid": [
+              593,
+              411
+            ]
+          },
+          {
+            "defect_id": "corr-3f896099",
+            "defect_type": "corrosion",
+            "bbox_xyxy": [
+              697,
+              696,
+              1128,
+              896
+            ],
+            "mask_pixel_count": 40227,
+            "surface_area_pct": 3.7414,
+            "confidence": 0.864,
+            "centroid": [
+              932,
+              792
+            ]
+          },
+          {
+            "defect_id": "corr-f1533cb0",
+            "defect_type": "corrosion",
+            "bbox_xyxy": [
+              60,
+              0,
+              208,
+              202
+            ],
+            "mask_pixel_count": 20946,
+            "surface_area_pct": 1.9481,
+            "confidence": 0.824,
+            "centroid": [
+              145,
+              108
+            ]
+          }
+        ],
+        "reasoning": {
+          "severity": "CRITICAL",
+          "confidence": 0.88,
+          "model": "meta-models/muse-spark-open",
+          "provider": "baseten",
+          "rationale": "Extensive corrosion (38.8% area, 8 sites, largest 31%) indicates severe wall loss despite low hoop stress (6.6 MPa, 97.4% margin). Elevated vibration 6.45 mm/s and strain 288 microstrain suggest active degradation. Classical-fallback backend warrants UT verification but precautionary critical rating required.",
+          "recommended_actions": [
+            "Immediate isolation/shutdown and urgent UT wall-thickness / corrosion mapping inspection",
+            "Investigate vibration source, check supports, and initiate corrosion mitigation and repair planning"
+          ],
+          "affected_zone": "Widespread pipe wall - ~38.8% surface area with 8 corrosion defects, dominant 31% patch"
+        },
+        "actions": [
+          {
+            "action": "pressure_valve_adjustment",
+            "target": "RELIEF VALVE PV-12",
+            "parameter": "throttle_reduction_pct",
+            "value": -35.0,
+            "display": "RELIEF VALVE PV-12 [THROTTLED -35%]",
+            "status": "executed",
+            "timestamp": "2026-11-01T21:28:53.651199+00:00"
+          },
+          {
+            "action": "emergency_lockdown",
+            "target": "SECTOR FLANGE",
+            "parameter": "isolation_barrier",
+            "value": "ISOLATED & SEALED",
+            "display": "SECTOR FLANGE [ISOLATED & SEALED]",
+            "status": "[AUTHORIZED & EXECUTED]",
+            "timestamp": "2026-11-01T21:28:53.651199+00:00"
+          },
+          {
+            "action": "drone_repositioning",
+            "target": "DRONE IR RECON",
+            "parameter": "flight_status",
+            "value": "AIRBORNE",
+            "display": "DRONE IR RECON [AIRBORNE]",
+            "status": "executed",
+            "timestamp": "2026-11-01T21:28:53.651199+00:00"
+          }
+        ],
+        "operator_auth": {
+          "action": "emergency_lockdown",
+          "target": "SECTOR FLANGE",
+          "approved": true,
+          "status": "[AUTHORIZED & EXECUTED]"
+        },
+        "recovery_confirmed": true,
+        "total_defect_area_pct": 38.7781,
+        "defect_backend": "classical-fallback",
+        "stability_passed": true,
+        "elapsed_seconds": 33.69
       }
     }
   }
